@@ -6,11 +6,13 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 app.use(express.json());
-// Configure CORS to allow requests from your Vercel frontend
 const corsOptions = {
-  origin: "https://stock-plus-five.vercel.app", // Replace with your Vercel frontend domain
-  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  origin: ["https://stock-plus-five.vercel.app", "http://localhost:3000"], // Allow only your frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE"], // Explicitly allow required methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Include headers used in your requests
+  optionsSuccessStatus: 200,
 };
+
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
