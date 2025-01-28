@@ -4,9 +4,14 @@ require("dotenv").config();
 var jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 5000;
 app.use(express.json());
-app.use(cors());
+// Configure CORS to allow requests from your Vercel frontend
+const corsOptions = {
+  origin: "https://stock-plus-five.vercel.app", // Replace with your Vercel frontend domain
+  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -24,7 +29,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
@@ -39,7 +44,7 @@ async function run() {
       return res.send({
         success: true,
         message: "Successfully fetched data",
-        data: result
+        data: result,
       });
     });
     app.post("/add-product", async (req, res) => {
