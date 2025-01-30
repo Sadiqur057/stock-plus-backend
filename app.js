@@ -2,20 +2,21 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-const port = process.env.PORT || 5000;
 const productRoutes = require("./src/modules/product/product.route");
 const authRoutes = require("./src/modules/auth/auth.route");
 const userRoutes = require("./src/modules/user/user.route");
+
 app.use(express.json());
 
 const corsOptions = {
-  origin: ["https://stock-plus-five.vercel.app", "http://localhost:3000",],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: ["https://stock-plus-five.vercel.app", "http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
+
 app.use("/api", productRoutes);
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
@@ -24,6 +25,23 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something went wrong!" });
 });
+
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// Only start the server if this file is run directly
+if (require.main === module) {
+  const port = process.env.PORT || 5000;
+  app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  });
+}
+
+module.exports = app;
