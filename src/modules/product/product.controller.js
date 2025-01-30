@@ -36,4 +36,33 @@ const addProduct = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, addProduct };
+const getProductDetails = async (req, res) => {
+  const id = req.params.id;
+  const result = await productServices.getSingleProduct(id);
+  if (!result?._id) {
+    return res.send({ success: false, message: "Something went wrong." });
+  }
+  res.send({
+    success: true,
+    message: "Product fetched successfully",
+    data: result,
+  });
+};
+
+const deleteProduct = async (req, res) => {
+  const id = req.params.id;
+  console.log("I got the id", id);
+  const result = await productServices.deleteProduct(id);
+  if (!result?.deletedCount) {
+    return res.send({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+  res.send({
+    success: true,
+    message: "Product deleted successfully",
+  });
+};
+
+module.exports = { getProducts, addProduct, getProductDetails, deleteProduct };
