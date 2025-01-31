@@ -13,4 +13,5 @@ const client = new MongoClient(uri, {
 const DB = client.db("StockManagerDB");
 const productCollection = DB.collection("products");
 const userCollection = DB.collection("users");
-module.exports = { DB, productCollection, userCollection };
+const invoiceCollection = DB.collection("invoices");
+module.exports = { DB, productCollection, userCollection, invoiceCollection };
