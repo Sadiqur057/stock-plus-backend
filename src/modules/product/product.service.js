@@ -14,7 +14,7 @@ const addNewProduct = async (data, user) => {
 const getAllProducts = async (user) => {
   const query = { user_email: user.email };
   console.log("checking user email", user.email);
-  const cursor = productCollection.find(query);
+  const cursor = productCollection.find(query).sort({ _id: -1 });
   const result = await cursor.toArray();
   return result;
 };
@@ -28,8 +28,8 @@ const getSingleProduct = async (id) => {
 const deleteProduct = async (id) => {
   const filter = { _id: new ObjectId(id) };
   const result = await productCollection.deleteOne(filter);
-  console.log(result)
-  return result
+  console.log(result);
+  return result;
 };
 
 const productServices = {
@@ -37,7 +37,7 @@ const productServices = {
   getAllProducts,
   getSingleProduct,
   getProductDetails,
-  deleteProduct
+  deleteProduct,
 };
 
 module.exports = productServices;

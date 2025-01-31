@@ -8,7 +8,7 @@ const saveInvoiceToDB = async (data) => {
 
 const getAllInvoices = async (user) => {
   const query = { user_email: user?.email };
-  const cursor = invoiceCollection.find(query);
+  const cursor = invoiceCollection.find(query).sort({ _id: -1 });
   const result = await cursor.toArray();
   return result;
 };
@@ -22,6 +22,6 @@ const getInvoiceDetails = async (id) => {
 const invoiceServices = {
   saveInvoiceToDB,
   getAllInvoices,
-  getInvoiceDetails
+  getInvoiceDetails,
 };
 module.exports = invoiceServices;
