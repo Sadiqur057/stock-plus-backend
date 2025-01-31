@@ -40,6 +40,24 @@ const addProduct = async (req, res) => {
   }
 };
 
+const updateProduct = async (req, res) => {
+  const data = req.body;
+  const productId = req.params.id;
+  console.log("i got the id", productId);
+  const result = await productServices.updateExistingProduct(data, productId);
+  if (!result?.modifiedCount) {
+    res.send({
+      success: false,
+      message: "Product cannot be updated",
+    });
+  }
+  res.send({
+    success: true,
+    message: "Product updated successfully",
+  });
+  return result;
+};
+
 const getProductDetails = async (req, res) => {
   const id = req.params.id;
   const result = await productServices.getSingleProduct(id);
@@ -69,4 +87,10 @@ const deleteProduct = async (req, res) => {
   });
 };
 
-module.exports = { getProducts, addProduct, getProductDetails, deleteProduct };
+module.exports = {
+  getProducts,
+  addProduct,
+  getProductDetails,
+  deleteProduct,
+  updateProduct,
+};

@@ -11,6 +11,15 @@ const addNewProduct = async (data, user) => {
   return result;
 };
 
+const updateExistingProduct = async (data, productId) => {
+  const filter = { _id: new ObjectId(productId) };
+  const updatedDoc = {
+    $set: data,
+  };
+  const result = await productCollection.updateOne(filter, updatedDoc);
+  return result;
+};
+
 const getAllProducts = async (user) => {
   const query = { user_email: user.email };
   console.log("checking user email", user.email);
@@ -38,6 +47,7 @@ const productServices = {
   getSingleProduct,
   getProductDetails,
   deleteProduct,
+  updateExistingProduct,
 };
 
 module.exports = productServices;
