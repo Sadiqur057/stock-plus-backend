@@ -5,6 +5,7 @@ const app = express();
 const productRoutes = require("./src/modules/product/product.route");
 const authRoutes = require("./src/modules/auth/auth.route");
 const userRoutes = require("./src/modules/user/user.route");
+const invoiceRoutes = require("./src/modules/invoice/invoice.route");
 
 app.use(express.json());
 
@@ -21,6 +22,7 @@ app.use(cors());
 app.use("/api", productRoutes);
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
+app.use("/api", invoiceRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
