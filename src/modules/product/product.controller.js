@@ -1,4 +1,5 @@
 const { productCollection } = require("../../models/db");
+const { getUserDetails } = require("../user/user.service");
 const productServices = require("./product.service");
 
 const getProducts = async (req, res) => {
@@ -20,7 +21,10 @@ const addProduct = async (req, res) => {
       message: "Please fill all the required field",
     });
   }
-  const result = await productServices.addNewProduct(data, user);
+
+  const targetUser = await getUserDetails(user);
+
+  const result = await productServices.addNewProduct(data, targetUser);
 
   if (result?.insertedId) {
     return res.send({
