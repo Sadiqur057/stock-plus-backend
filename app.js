@@ -8,6 +8,7 @@ const userRoutes = require("./src/modules/user/user.route");
 const invoiceRoutes = require("./src/modules/invoice/invoice.route");
 const customerRoutes = require("./src/modules/customer/customer.route");
 const attributeRoutes = require("./src/modules/attribute/attribute.route");
+const transactionRoutes = require("./src/modules/transaction/transaction.route");
 
 app.use(express.json());
 
@@ -27,6 +28,7 @@ app.use("/api", userRoutes);
 app.use("/api", invoiceRoutes);
 app.use("/api", customerRoutes);
 app.use("/api", attributeRoutes);
+app.use("/api", transactionRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");

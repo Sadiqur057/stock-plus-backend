@@ -16,11 +16,14 @@ const userCollection = DB.collection("users");
 const invoiceCollection = DB.collection("invoices");
 const customerCollection = DB.collection("customers");
 const attributeCollection = DB.collection("attributes")
+const transactionCollection = DB.collection("transactions")
 module.exports = {
+  client,
   DB,
   productCollection,
   userCollection,
   invoiceCollection,
   customerCollection,
-  attributeCollection
+  attributeCollection,
+  transactionCollection
 };
