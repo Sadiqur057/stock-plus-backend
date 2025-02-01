@@ -3,8 +3,9 @@ const { getUserDetails } = require("../user/user.service");
 const productServices = require("./product.service");
 
 const getProducts = async (req, res) => {
-  console.log("Hello there");
-  const result = await productServices.getAllProducts(req.user);
+  const user = req.user
+  const filters = req.query;
+  const result = await productServices.getAllProducts(user, filters);
   return res.send({
     success: true,
     message: "Successfully fetched data",
@@ -43,7 +44,6 @@ const addProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   const data = req.body;
   const productId = req.params.id;
-  console.log("i got the id", productId);
   const result = await productServices.updateExistingProduct(data, productId);
   if (!result?.modifiedCount) {
     res.send({
