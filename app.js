@@ -6,6 +6,8 @@ const productRoutes = require("./src/modules/product/product.route");
 const authRoutes = require("./src/modules/auth/auth.route");
 const userRoutes = require("./src/modules/user/user.route");
 const invoiceRoutes = require("./src/modules/invoice/invoice.route");
+const customerRoutes = require("./src/modules/customer/customer.route");
+const attributeRoutes = require("./src/modules/attribute/attribute.route");
 
 app.use(express.json());
 
@@ -23,6 +25,8 @@ app.use("/api", productRoutes);
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", invoiceRoutes);
+app.use("/api", customerRoutes);
+app.use("/api", attributeRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
