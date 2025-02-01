@@ -3,6 +3,7 @@ const {
   saveInvoiceToDB,
   getAllInvoices,
   getInvoiceDetails,
+  createTransactionToDB,
 } = require("./invoice.service");
 
 const createInvoice = async (req, res) => {
@@ -25,7 +26,7 @@ const createInvoice = async (req, res) => {
       total: data?.total_cost.total,
       tax: data?.total_cost.tax,
       total_paid: 0,
-      total_due: data?.total_cost?.subtotal,
+      total_due: data?.total_cost?.total,
       status: "unpaid",
     },
     created_at: data?.created_at,
@@ -77,4 +78,15 @@ const getInvoice = async (req, res) => {
   });
 };
 
-module.exports = { createInvoice, getInvoices, getInvoice };
+const createTransaction = async (req, res) => {
+  console.log("hello");
+  const id = req.params.id;
+
+  const data = req.body;
+
+  const result = await createTransactionToDB(id, data);
+  console.log("sending", result);
+  res.send(result);
+};
+
+module.exports = { createInvoice, getInvoices, getInvoice, createTransaction };
