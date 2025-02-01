@@ -3,7 +3,7 @@ const { customerCollection } = require("../../models/db");
 
 const getAllCustomer = async (user) => {
   const query = { added_by: user?.email };
-  const cursor = customerCollection.find(query);
+  const cursor = customerCollection.find(query).sort({ _id: -1 });
   const result = await cursor.toArray();
   return result;
 };
