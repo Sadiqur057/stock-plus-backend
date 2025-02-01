@@ -14,4 +14,13 @@ const DB = client.db("StockManagerDB");
 const productCollection = DB.collection("products");
 const userCollection = DB.collection("users");
 const invoiceCollection = DB.collection("invoices");
-module.exports = { DB, productCollection, userCollection, invoiceCollection };
+const customerCollection = DB.collection("customers");
+const attributeCollection = DB.collection("attributes")
+module.exports = {
+  DB,
+  productCollection,
+  userCollection,
+  invoiceCollection,
+  customerCollection,
+  attributeCollection
+};
