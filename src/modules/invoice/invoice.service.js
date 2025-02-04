@@ -2,13 +2,69 @@ const { ObjectId } = require("mongodb");
 const {
   invoiceCollection,
   transactionCollection,
-  DB,
   client,
+  productCollection,
 } = require("../../models/db");
 
 const saveInvoiceToDB = async (data) => {
-  const result = await invoiceCollection.insertOne(data);
-  return result;
+  if (!data.products || data.products.length === 0) {
+    return { success: false, message: "Please add at least one product." };
+  }
+
+  if (!data?.customer?.name) {
+    return { success: false, message: "Please add customer Information" };
+  }
+  const session = client.startSession();
+
+  try {
+    session.startTransaction();
+
+    const productIds = data.products.map((p) => new ObjectId(p._id));
+    const existingProducts = await productCollection
+      .find({ _id: { $in: productIds } }, { session })
+      .toArray();
+
+    const productMap = new Map(
+      existingProducts.map((p) => [p._id.toString(), p])
+    );
+
+    for (const product of data.products) {
+      const existingProduct = productMap.get(product._id);
+      if (existingProduct && existingProduct.quantity < product.quantity) {
+        throw new Error(
+          `Insufficient stock for ${product.productName}. Available: ${existingProduct.quantity}, Required: ${product.quantity}`
+        );
+      }
+    }
+
+    for (const product of data.products) {
+      if (productMap.has(product._id)) {
+        await productCollection.updateOne(
+          { _id: new ObjectId(product._id) },
+          { $inc: { quantity: -product.quantity } },
+          { session }
+        );
+      }
+    }
+
+    const result = await invoiceCollection.insertOne(data, { session });
+
+    if (!result?.insertedId) {
+      throw new Error("Something went wrong! Invoice was not created.");
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return {
+      success: true,
+      message: "Success! Invoice created successfully.",
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    return { success: false, message: error.message };
+  }
 };
 
 const getAllInvoices = async (user) => {
@@ -29,7 +85,6 @@ const createTransactionToDB = async (id, data) => {
     return { success: false, message: "Invalid invoice ID." };
   }
   const { amount } = data?.data;
-  console.log(typeof amount);
 
   if (typeof amount !== "number" || amount <= 0) {
     return { success: false, message: "Invalid payment amount." };
@@ -49,7 +104,7 @@ const createTransactionToDB = async (id, data) => {
     }
 
     const { name, email } = targetInvoice?.customer;
-    const { total, total_due, total_paid } = targetInvoice?.cost_summary;
+    const { total_due, total_paid } = targetInvoice?.cost_summary;
     const { created_by, user_email } = targetInvoice;
 
     if (amount > total_due) {
@@ -85,7 +140,7 @@ const createTransactionToDB = async (id, data) => {
     const formattedData = new Date().toLocaleString();
     const transactionData = {
       customer: { name, email },
-      added_by: user_email, 
+      added_by: user_email,
       user_name: created_by,
       payment_method: data?.data?.payment_method,
       amount: data?.data?.amount,

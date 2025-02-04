@@ -31,18 +31,11 @@ const createInvoice = async (req, res) => {
     },
     created_at: data?.created_at,
   };
-  console.log("data to send", updatedData);
   const result = await saveInvoiceToDB(updatedData);
-  if (!result?.insertedId) {
-    return res.status(400).send({
-      success: false,
-      message: "Something went wrong!",
-    });
+  if (!result?.success) {
+    return res.send(result);
   }
-  res.status(200).send({
-    success: true,
-    message: "Success! Invoice created successfully.",
-  });
+  res.status(200).send(result);
 };
 
 const getInvoices = async (req, res) => {
@@ -64,7 +57,6 @@ const getInvoices = async (req, res) => {
 const getInvoice = async (req, res) => {
   const id = req.params.id;
   const result = await getInvoiceDetails(id);
-  console.log("checking before sending", result);
   if (!result) {
     return res.send({
       success: false,
@@ -79,13 +71,11 @@ const getInvoice = async (req, res) => {
 };
 
 const createTransaction = async (req, res) => {
-  console.log("hello");
   const id = req.params.id;
 
   const data = req.body;
 
   const result = await createTransactionToDB(id, data);
-  console.log("sending", result);
   res.send(result);
 };
 
