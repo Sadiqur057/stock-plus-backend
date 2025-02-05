@@ -58,7 +58,7 @@ const updateStock = async (req, res) => {
     productId
   );
 
-  return result;
+  return res.send(result);
 };
 
 const getProductDetails = async (req, res) => {

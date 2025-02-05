@@ -50,7 +50,17 @@ const updateExistingProductStock = async (data, productId) => {
     $set: updatedData,
   };
   const result = await productCollection.updateOne(filter, updatedDoc);
-  return result;
+  
+  if (!result?.modifiedCount) {
+    return {
+      success: false,
+      message: "Product is not updated",
+    };
+  }
+  return {
+    success: true,
+    message: "Product stock updated successfully",
+  };
 };
 
 const getAllProducts = async (user, filters) => {
