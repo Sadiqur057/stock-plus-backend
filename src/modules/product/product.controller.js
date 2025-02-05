@@ -46,17 +46,7 @@ const updateProduct = async (req, res) => {
   const data = req.body;
   const productId = req.params.id;
   const result = await productServices.updateExistingProduct(data, productId);
-  if (!result?.modifiedCount) {
-    res.send({
-      success: false,
-      message: "Product cannot be updated",
-    });
-  }
-  res.send({
-    success: true,
-    message: "Product updated successfully",
-  });
-  return result;
+  return res.send(result);
 };
 
 const updateStock = async (req, res) => {
@@ -67,16 +57,7 @@ const updateStock = async (req, res) => {
     data,
     productId
   );
-  if (!result?.modifiedCount) {
-    res.send({
-      success: false,
-      message: "Product cannot be updated",
-    });
-  }
-  res.send({
-    success: true,
-    message: "Product updated successfully",
-  });
+
   return result;
 };
 
@@ -115,5 +96,5 @@ module.exports = {
   getProductDetails,
   deleteProduct,
   updateProduct,
-  updateStock
+  updateStock,
 };

@@ -22,11 +22,22 @@ const updateExistingProduct = async (data, productId) => {
     purchasePrice: Number(data?.purchasePrice),
     quantity: Number(data?.quantity),
   };
+
   const updatedDoc = {
     $set: updatedData,
   };
   const result = await productCollection.updateOne(filter, updatedDoc);
-  return result;
+
+  if (!result?.modifiedCount) {
+    return {
+      success: false,
+      message: "Product is not updated",
+    };
+  }
+  return {
+    success: true,
+    message: "Product updated successfully",
+  };
 };
 const updateExistingProductStock = async (data, productId) => {
   const filter = { _id: new ObjectId(productId) };
@@ -35,7 +46,6 @@ const updateExistingProductStock = async (data, productId) => {
   const updatedData = {
     quantity: Number(data?.quantity) + quantity,
   };
-  console.log("checking updated data",quantity, updatedData, typeof updatedData.quantity);
   const updatedDoc = {
     $set: updatedData,
   };
