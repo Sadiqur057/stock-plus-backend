@@ -5,6 +5,7 @@ const {
   getProductDetails,
   deleteProduct,
   updateProduct,
+  updateStock,
 } = require("./product.controller");
 const { verifyToken } = require("../../middleware/authorization");
 const router = express.Router();
@@ -22,5 +23,7 @@ router.get("/product/:id", verifyToken, getProductDetails);
 router.delete("/product/:id", verifyToken, deleteProduct);
 
 router.patch("/update-product/:id", verifyToken, updateProduct);
+
+router.patch("/add-stock/:id", verifyToken, updateStock);
 
 module.exports = router;

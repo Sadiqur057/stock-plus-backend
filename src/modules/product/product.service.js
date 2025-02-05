@@ -28,6 +28,20 @@ const updateExistingProduct = async (data, productId) => {
   const result = await productCollection.updateOne(filter, updatedDoc);
   return result;
 };
+const updateExistingProductStock = async (data, productId) => {
+  const filter = { _id: new ObjectId(productId) };
+  const targetProduct = await productCollection.findOne(filter);
+  const { quantity } = targetProduct || {};
+  const updatedData = {
+    quantity: Number(data?.quantity) + quantity,
+  };
+  console.log("checking updated data",quantity, updatedData, typeof updatedData.quantity);
+  const updatedDoc = {
+    $set: updatedData,
+  };
+  const result = await productCollection.updateOne(filter, updatedDoc);
+  return result;
+};
 
 const getAllProducts = async (user, filters) => {
   const { search, filter, sort } = filters;
@@ -79,7 +93,6 @@ const getSingleProduct = async (id) => {
 const deleteProduct = async (id) => {
   const filter = { _id: new ObjectId(id) };
   const result = await productCollection.deleteOne(filter);
-  console.log(result);
   return result;
 };
 
@@ -90,6 +103,7 @@ const productServices = {
   getProductDetails,
   deleteProduct,
   updateExistingProduct,
+  updateExistingProductStock,
 };
 
 module.exports = productServices;
