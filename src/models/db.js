@@ -15,8 +15,9 @@ const productCollection = DB.collection("products");
 const userCollection = DB.collection("users");
 const invoiceCollection = DB.collection("invoices");
 const customerCollection = DB.collection("customers");
-const attributeCollection = DB.collection("attributes")
-const transactionCollection = DB.collection("transactions")
+const attributeCollection = DB.collection("attributes");
+const transactionCollection = DB.collection("transactions");
+const revenueCollection = DB.collection("revenue");
 module.exports = {
   client,
   DB,
@@ -25,5 +26,6 @@ module.exports = {
   invoiceCollection,
   customerCollection,
   attributeCollection,
-  transactionCollection
+  transactionCollection,
+  revenueCollection
 };
