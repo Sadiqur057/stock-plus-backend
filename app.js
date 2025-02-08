@@ -2,14 +2,8 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-const productRoutes = require("./src/modules/product/product.route");
-const authRoutes = require("./src/modules/auth/auth.route");
-const userRoutes = require("./src/modules/user/user.route");
-const invoiceRoutes = require("./src/modules/invoice/invoice.route");
-const customerRoutes = require("./src/modules/customer/customer.route");
-const attributeRoutes = require("./src/modules/attribute/attribute.route");
-const transactionRoutes = require("./src/modules/transaction/transaction.route");
-const dashboardRoutes = require("./src/modules/dashboard/dashboard.route");
+
+const routes = require("./src/routes/route");
 
 app.use(express.json());
 
@@ -23,14 +17,7 @@ const corsOptions = {
 // app.use(cors(corsOptions));
 app.use(cors());
 
-app.use("/api", productRoutes);
-app.use("/api", authRoutes);
-app.use("/api", userRoutes);
-app.use("/api", invoiceRoutes);
-app.use("/api", customerRoutes);
-app.use("/api", attributeRoutes);
-app.use("/api", transactionRoutes);
-app.use("/api", dashboardRoutes);
+app.use("/", routes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
