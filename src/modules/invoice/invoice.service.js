@@ -73,6 +73,9 @@ const saveInvoiceToDB = async (data) => {
       created_at: data?.created_at,
       created_by: data?.user_email,
       company_email: data?.company?.email,
+      customer_name: data?.customer?.name,
+      customer_email: data?.customer?.email,
+      products: data?.products,
     };
 
     const revenueResult = await revenueCollection.insertOne(revenueData, {
@@ -113,6 +116,12 @@ const getAllInvoices = async (user) => {
 const getInvoiceDetails = async (id) => {
   const filter = { _id: new ObjectId(id) };
   const result = await invoiceCollection.findOne(filter);
+  return result;
+};
+
+const deleteInvoiceFromDB = async (id) => {
+  const filter = { _id: new ObjectId(id) };
+  const result = await invoiceCollection.deleteOne(filter);
   return result;
 };
 
@@ -213,5 +222,6 @@ const invoiceServices = {
   getAllInvoices,
   getInvoiceDetails,
   createTransactionToDB,
+  deleteInvoiceFromDB
 };
 module.exports = invoiceServices;

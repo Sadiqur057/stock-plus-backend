@@ -4,6 +4,7 @@ const {
   getAllInvoices,
   getInvoiceDetails,
   createTransactionToDB,
+  deleteInvoiceFromDB,
 } = require("./invoice.service");
 
 const createInvoice = async (req, res) => {
@@ -92,6 +93,21 @@ const getInvoice = async (req, res) => {
   });
 };
 
+const deleteInvoice = async (req, res) => {
+  const id = req.params.id;
+  const result = await deleteInvoiceFromDB(id);
+  if (!result.deletedCount) {
+    return res.send({
+      success: false,
+      message: "Invoice Now Found",
+    });
+  }
+  res.send({
+    success: true,
+    message: "Invoice deleted successfully",
+  });
+};
+
 const createTransaction = async (req, res) => {
   const id = req.params.id;
 
@@ -101,4 +117,4 @@ const createTransaction = async (req, res) => {
   res.send(result);
 };
 
-module.exports = { createInvoice, getInvoices, getInvoice, createTransaction };
+module.exports = { createInvoice, getInvoices, getInvoice, createTransaction,deleteInvoice };
