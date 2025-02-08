@@ -4,6 +4,7 @@ const {
   transactionCollection,
   client,
   productCollection,
+  revenueCollection,
 } = require("../../models/db");
 
 const saveInvoiceToDB = async (data) => {
@@ -14,6 +15,7 @@ const saveInvoiceToDB = async (data) => {
   if (!data?.customer?.name) {
     return { success: false, message: "Please add customer Information" };
   }
+
   const session = client.startSession();
 
   try {
@@ -27,6 +29,8 @@ const saveInvoiceToDB = async (data) => {
     const productMap = new Map(
       existingProducts.map((p) => [p._id.toString(), p])
     );
+
+    let totalRevenue = 0;
 
     for (const product of data.products) {
       const existingProduct = productMap.get(product._id);
@@ -45,6 +49,38 @@ const saveInvoiceToDB = async (data) => {
           { session }
         );
       }
+
+      const existingProduct = productMap.get(product._id);
+      if (existingProduct) {
+        const profitPerUnit = product.salePrice - existingProduct.purchasePrice;
+        totalRevenue += profitPerUnit * product.quantity;
+      }
+    }
+
+    const updatedRevenue = totalRevenue - data?.cost_summary?.discount;
+    const total_cost = data?.cost_summary?.total;
+    const revenue_percentage = (updatedRevenue / total_cost) * 100;
+
+    data.cost_summary.revenue = updatedRevenue;
+    data.cost_summary.revenue_percentage = Number(
+      revenue_percentage.toFixed(2)
+    );
+
+    const revenueData = {
+      total_cost,
+      revenue: updatedRevenue,
+      revenue_percentage: Number(revenue_percentage.toFixed(2)),
+      created_at: data?.created_at,
+      created_by: data?.user_email,
+      company_email: data?.company?.email,
+    };
+
+    const revenueResult = await revenueCollection.insertOne(revenueData, {
+      session,
+    });
+
+    if (!revenueResult?.insertedId) {
+      throw new Error("Something went wrong! Invoice was not created.");
     }
 
     const result = await invoiceCollection.insertOne(data, { session });
