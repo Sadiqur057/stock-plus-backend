@@ -30,10 +30,12 @@ const getDashboardData = async (req, res) => {
     let due_invoice_amount = 0;
     let total_paid_amount = 0;
     let total_invoice_amount = 0;
+    let total_revenue_amount = 0;
 
     let uniqueCustomers = new Set();
-    let invoiceStats = {}; // Stores invoice statistics for `invoiceChartData`
-    let paymentStats = {}; // Stores payment statistics for `paymentChartData`
+    let invoiceStats = {};
+    let paymentStats = {};
+    let revenueStats = {};
 
     invoiceData.forEach((invoice) => {
       const costSummary = invoice.cost_summary || {};
@@ -45,9 +47,9 @@ const getDashboardData = async (req, res) => {
 
       // Extract month and year from `created_at`
       const invoiceDate = new Date(invoice.created_at);
-      const month = invoiceDate.toLocaleString("en-US", { month: "short" }); // "Jan", "Feb", etc.
+      const month = invoiceDate.toLocaleString("en-US", { month: "short" });
       const year = invoiceDate.getFullYear();
-      const monthYear = `${month}-${year}`; // Format: "Jan-2025"
+      const monthYear = `${month}-${year}`;
 
       // Initialize month data if not exists
       if (!invoiceStats[monthYear]) {
@@ -59,13 +61,23 @@ const getDashboardData = async (req, res) => {
       if (!paymentStats[monthYear]) {
         paymentStats[monthYear] = { paid_amount: 0, due_amount: 0 };
       }
+      if (!revenueStats[monthYear]) {
+        revenueStats[monthYear] = { cost: 0, revenue: 0 };
+      }
 
       // Update total invoice stats
       invoiceStats[monthYear].total_invoice_created += 1;
       invoiceStats[monthYear].total_invoice_amount += costSummary.total || 0;
 
+      // Update revenue stats
+      const revenue = costSummary.revenue || 0;
+      const cost = (costSummary.total || 0) - revenue;
+      revenueStats[monthYear].revenue += revenue;
+      revenueStats[monthYear].cost += cost;
+      total_revenue_amount += revenue;
+
       // Update payment stats
-      total_invoice_amount += costSummary.total || 0; // Track total invoice amount
+      total_invoice_amount += costSummary.total || 0;
 
       if (costSummary.status === "paid") {
         paid_invoice_count++;
@@ -91,7 +103,7 @@ const getDashboardData = async (req, res) => {
         total_invoice_created: invoiceStats[monthYear].total_invoice_created,
         total_invoice_amount: invoiceStats[monthYear].total_invoice_amount,
       }))
-      .sort((a, b) => new Date(b.name) - new Date(a.name)); // Sort latest first
+      .sort((a, b) => new Date(b.name) - new Date(a.name));
 
     const paymentChartData = Object.keys(paymentStats)
       .map((monthYear) => ({
@@ -99,7 +111,15 @@ const getDashboardData = async (req, res) => {
         paid_amount: paymentStats[monthYear].paid_amount,
         due_amount: paymentStats[monthYear].due_amount,
       }))
-      .sort((a, b) => new Date(b.month) - new Date(a.month)); // Sort latest first
+      .sort((a, b) => new Date(b.month) - new Date(a.month));
+
+    const revenueChartData = Object.keys(revenueStats)
+      .map((monthYear) => ({
+        month: monthYear,
+        cost: revenueStats[monthYear].cost,
+        revenue: revenueStats[monthYear].revenue,
+      }))
+      .sort((a, b) => new Date(b.month) - new Date(a.month));
 
     // Prepare response data
     const data = {
@@ -110,14 +130,16 @@ const getDashboardData = async (req, res) => {
         total_payment,
         due_invoice_count: unpaid_invoice_count + due_invoice_count,
         due_invoice_amount,
-        total_paid_amount, // Includes payments from both paid and partially paid invoices
-        total_invoice_amount, // Sum of all invoices' total amounts
+        total_paid_amount,
+        total_invoice_amount,
+        total_revenue_amount,
         transaction_count,
         total_sell: total_payment + due_invoice_amount,
         customer_count: uniqueCustomers.size,
       },
       invoiceChartData,
       paymentChartData,
+      revenueChartData,
     };
 
     console.log(data);
