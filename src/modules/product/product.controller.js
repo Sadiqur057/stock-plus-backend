@@ -76,7 +76,6 @@ const getProductDetails = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
   const id = req.params.id;
-  console.log("I got the id", id);
   const result = await productServices.deleteProduct(id);
   if (!result?.deletedCount) {
     return res.send({

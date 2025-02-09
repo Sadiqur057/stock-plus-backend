@@ -26,7 +26,6 @@ const addTransaction = async (req, res) => {
   const data = req.body;
   const user = req.user;
   const result = await saveTransactionToDB(data, user);
-  console.log("checking result", result);
   if (!result.insertedId) {
     return res.send({
       success: false,

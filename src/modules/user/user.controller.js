@@ -14,7 +14,6 @@ const updateAccount = async (req, res) => {
   const user = req.user;
   const data = req.body;
   const result = await userServices.updateUserDetails(user, data);
-  console.log(result);
   if (!result?.acknowledged) {
     res.send({
       success: false,
