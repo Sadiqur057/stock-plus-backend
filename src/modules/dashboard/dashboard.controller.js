@@ -2,9 +2,9 @@ const { invoiceCollection, transactionCollection } = require("../../models/db");
 
 const getDashboardData = async (req, res) => {
   try {
-    const { email } = req.user;
-    const invoiceQuery = { user_email: email };
-    const transactionQuery = { added_by: email };
+    const { company_email } = req.user;
+    const invoiceQuery = { company_email: company_email };
+    const transactionQuery = { company_email: company_email };
 
     // Fetch invoices and transactions
     const invoiceData = await invoiceCollection
@@ -142,7 +142,6 @@ const getDashboardData = async (req, res) => {
       revenueChartData,
     };
 
-    console.log(data);
     return res.status(200).send({
       success: true,
       message: "Data fetched successfully",

@@ -21,8 +21,9 @@ const createInvoice = async (req, res) => {
     },
     customer: data?.customer,
     products: data?.products,
-    created_by: targetUser.name,
-    user_email: targetUser.email,
+    company_email: user?.company_email,
+    created_by_email: user?.email,
+    created_by_name: user?.name,
     cost_summary: {
       subtotal: Number(data?.total_cost.subtotal.toFixed(2)),
       total: Number(data?.total_cost?.total.toFixed(2)),
@@ -37,7 +38,7 @@ const createInvoice = async (req, res) => {
     created_at: data?.created_at,
   };
 
-  const result = await saveInvoiceToDB(updatedData);
+  const result = await saveInvoiceToDB(updatedData, user);
   if (!result?.success) {
     return res.send(result);
   }
@@ -63,7 +64,7 @@ const getInvoices = async (req, res) => {
       due_invoice_count: result?.length - paid_invoice_count,
     },
   };
-  console.log("cel", updatedData);
+
   if (result.length < 0) {
     return res.send({
       success: false,
@@ -110,11 +111,17 @@ const deleteInvoice = async (req, res) => {
 
 const createTransaction = async (req, res) => {
   const id = req.params.id;
-
+  const user = req.user;
   const data = req.body;
 
-  const result = await createTransactionToDB(id, data);
+  const result = await createTransactionToDB(id, data, user);
   res.send(result);
 };
 
-module.exports = { createInvoice, getInvoices, getInvoice, createTransaction,deleteInvoice };
+module.exports = {
+  createInvoice,
+  getInvoices,
+  getInvoice,
+  createTransaction,
+  deleteInvoice,
+};
