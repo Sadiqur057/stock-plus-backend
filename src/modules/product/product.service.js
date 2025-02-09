@@ -7,8 +7,9 @@ const addNewProduct = async (data, user) => {
     salePrice: Number(data?.salePrice),
     purchasePrice: Number(data?.purchasePrice),
     quantity: Number(data?.quantity),
-    added_by: user?.name,
-    user_email: user?.email,
+    company_email: user?.company_email,
+    created_by_email: user?.email,
+    created_by_name: user?.name
   };
   const result = await productCollection.insertOne(productData);
   return result;
@@ -65,7 +66,7 @@ const updateExistingProductStock = async (data, productId) => {
 
 const getAllProducts = async (user, filters) => {
   const { search, filter, sort } = filters;
-  const query = { user_email: user.email };
+  const query = { company_email: user?.company_email };
 
   if (filter && filter !== "all") {
     if (filter === "stockOut") {

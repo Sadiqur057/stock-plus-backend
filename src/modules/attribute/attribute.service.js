@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 const { attributeCollection } = require("../../models/db");
 
 const getAllAttribute = async (user) => {
-  const query = { added_by: user?.email };
+  const query = { company_email: user?.company_email };
   const cursor = attributeCollection.find(query);
   const result = await cursor.toArray();
   return result;
@@ -11,7 +11,9 @@ const getAllAttribute = async (user) => {
 const saveAttributeToDB = async (data, user) => {
   const updatedData = {
     ...data,
-    added_by: user?.email,
+    company_email: user?.company_email,
+    created_by_email: user?.email,
+    created_by_name: user?.name
   };
   const result = await attributeCollection.insertOne(updatedData);
   return result;
@@ -43,6 +45,6 @@ const services = {
   getAllAttribute,
   getSingleAttribute,
   updateAttributeDetails,
-  deleteAttributeFromDB
+  deleteAttributeFromDB,
 };
 module.exports = services;

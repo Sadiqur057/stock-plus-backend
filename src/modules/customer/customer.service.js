@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 const { customerCollection } = require("../../models/db");
 
 const getAllCustomer = async (user) => {
-  const query = { added_by: user?.email };
+  const query = { company_email: user?.company_email };
   const cursor = customerCollection.find(query).sort({ _id: -1 });
   const result = await cursor.toArray();
   return result;
@@ -11,7 +11,9 @@ const getAllCustomer = async (user) => {
 const saveCustomerToDB = async (data, user) => {
   const updatedData = {
     ...data,
-    added_by: user?.email,
+    company_email: user?.company_email,
+    created_by_email: user?.email,
+    created_by_name: user?.name
   };
   const result = await customerCollection.insertOne(updatedData);
   return result;

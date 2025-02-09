@@ -5,14 +5,17 @@ const { hashPassword, comparePassword } = require("../../utils/passwordHash");
 const registerNewUser = async (data) => {
   const { email, password, name } = data;
   if (!email || !password || !name) {
-    return ({
+    return {
       success: false,
       message: "Register Failed! Please fill up all the fields.",
-    });
+    };
   }
 
   try {
-    const existingUser = await userCollection.findOne({ email: data?.email });
+    const existingUser = await userCollection.findOne({
+      $or: [{ email: data?.email }, { company_email: data?.email }],
+    });
+
     if (existingUser) {
       return {
         success: false,
@@ -24,8 +27,9 @@ const registerNewUser = async (data) => {
       email,
       name,
       password: encryptedPassword,
-      created_at: new Date().toLocaleDateString(),
+      created_at: new Date().toLocaleString(),
       role: "user",
+      company_email: email,
       isVerified: false,
     };
 
@@ -44,7 +48,7 @@ const registerNewUser = async (data) => {
       };
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 

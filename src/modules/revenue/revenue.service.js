@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 const { revenueCollection } = require("../../models/db");
 
 const getAllRevenue = async (user) => {
-  const query = { created_by: user?.email };
+  const query = { company_email: user?.company_email };
   const cursor = revenueCollection.find(query).sort({ _id: -1 });
   const result = await cursor.toArray();
   return result;
@@ -11,7 +11,9 @@ const getAllRevenue = async (user) => {
 const saveRevenueToDB = async (data, user) => {
   const updatedData = {
     ...data,
-    added_by: user?.email,
+    company_email: user?.company_email,
+    created_by_email: user?.email,
+    created_by_name: user?.name
   };
   const result = await revenueCollection.insertOne(updatedData);
   return result;
