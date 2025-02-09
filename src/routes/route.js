@@ -7,6 +7,7 @@ const attributeRoutes = require("../modules/attribute/attribute.route");
 const transactionRoutes = require("../modules/transaction/transaction.route");
 const dashboardRoutes = require("../modules/dashboard/dashboard.route");
 const revenueRoutes = require("../modules/revenue/revenue.route");
+const inventoryRoutes = require("../modules/inventory/inventory.route");
 
 const router = require("express").Router();
 
@@ -46,6 +47,10 @@ const routes = [
   {
     path: "/api",
     routes: revenueRoutes,
+  },
+  {
+    path: "/api",
+    routes: inventoryRoutes,
   },
 ];
 
