@@ -1,12 +1,15 @@
 const { ObjectId } = require("mongodb");
-const { DB, client } = require("../../models/db");
-
-const inventoryCollection = DB.collection("inventory");
-const productCollection = DB.collection("products");
-
+const {
+  client,
+  inventoryCollection,
+  productCollection,
+} = require("../../models/db");
+const { getSingleReport, deleteReport } = require("./inventory.service");
+const userServices = require("../user/user.service");
 const addItems = async (req, res) => {
   const data = req.body;
   const user = req.user;
+  const targetUser = await userServices.getUserDetails(user);
   const products = data?.products;
 
   if (!products || !Array.isArray(products)) {
@@ -66,6 +69,12 @@ const addItems = async (req, res) => {
           company_email: user?.company_email,
           created_by_email: user?.email,
           created_by_name: user?.name,
+          company: {
+            name: targetUser?.company_name,
+            location: targetUser?.company_location,
+            email: targetUser?.company_email,
+            phone: targetUser?.company_phone,
+          },
         },
         { session }
       );
@@ -99,4 +108,26 @@ const getItems = async (req, res) => {
   });
 };
 
-module.exports = { addItems, getItems };
+const getInventoryReport = async (req, res) => {
+  const id = req.params.id;
+  const result = await getSingleReport(id);
+  if (!result) {
+    return res.send({ success: false, message: "No Report Found" });
+  }
+  res.send({ success: true, message: "Report Found", data: result });
+};
+const deleteInventoryReport = async (req, res) => {
+  const id = req.params.id;
+  const result = await deleteReport(id);
+  if (!result.deletedCount) {
+    return res.send({ success: false, message: "No Report Found" });
+  }
+  res.send({ success: true, message: "Report deleted successfully" });
+};
+
+module.exports = {
+  addItems,
+  getItems,
+  getInventoryReport,
+  deleteInventoryReport,
+};
