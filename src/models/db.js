@@ -29,5 +29,7 @@ module.exports = {
   customerCollection: DB.collection("customers"),
   attributeCollection: DB.collection("attributes"),
   transactionCollection: DB.collection("transactions"),
-  revenueCollection: DB.collection("revenue")
+  revenueCollection: DB.collection("revenue"),
+  inventoryCollection:DB.collection("inventory"),
+  supplierCollection:DB.collection("supplier"),
 };
