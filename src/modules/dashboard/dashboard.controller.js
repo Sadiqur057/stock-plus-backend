@@ -1,4 +1,5 @@
 const { invoiceCollection, transactionCollection } = require("../../models/db");
+const { toFixedNumber } = require("../../utils/utility");
 
 const getDashboardData = async (req, res) => {
   try {
@@ -156,4 +157,51 @@ const getDashboardData = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardData };
+const getAccountingData = async (req, res) => {
+  const user = req.user;
+  const query = { company_email: user?.company_email };
+  const cursor = transactionCollection.find(query);
+  const transactions = await cursor.toArray();
+
+  if (!transactions || transactions.length === 0) {
+    return res.send({
+      success: false,
+      message: "No Data Found",
+    });
+  }
+
+  let total_sales = 0;
+  let total_purchase = 0;
+  let other_costs = 0;
+
+  transactions.forEach((transaction) => {
+    if (transaction.transaction_desc === "sales") {
+      total_sales += transaction.amount;
+    } else if (transaction.transaction_desc === "purchases") {
+      total_purchase += transaction.amount;
+    } else if (transaction.transaction_desc === "others") {
+      other_costs += transaction.amount;
+    }
+  });
+  const total_expense = toFixedNumber(total_purchase + other_costs);
+  const profit = toFixedNumber(total_sales - total_expense);
+  const profit_percentage = toFixedNumber((profit / total_expense) * 100);
+
+  res.send({
+    success: true,
+    message: "Data fetched successfully",
+    data: {
+      transactions,
+      summary: {
+        profit,
+        profit_percentage,
+        total_expense,
+        total_sales,
+        total_purchase,
+        other_costs
+      }
+    }
+  });
+};
+
+module.exports = { getDashboardData,getAccountingData };
