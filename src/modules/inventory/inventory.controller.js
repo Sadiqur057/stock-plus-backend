@@ -3,6 +3,7 @@ const {
   client,
   inventoryCollection,
   productCollection,
+  transactionCollection,
 } = require("../../models/db");
 const { getSingleReport, deleteReport } = require("./inventory.service");
 const userServices = require("../user/user.service");
@@ -63,7 +64,7 @@ const addItems = async (req, res) => {
       }
 
       // Add to inventory collection
-      await inventoryCollection.insertOne(
+      const inventoryResult = await inventoryCollection.insertOne(
         {
           ...data,
           company_email: user?.company_email,
@@ -78,6 +79,38 @@ const addItems = async (req, res) => {
         },
         { session }
       );
+      if(!inventoryResult?.insertedId){
+        throw new Error("Something went wrong")
+      }
+      const invoiceId = inventoryResult.insertedId;
+
+
+      // start a transaction
+      if (data?.transaction_data && data?.transaction_data?.amount > 0) {
+        const { amount, payment_description, payment_method } =
+          data?.transaction_data;
+        const transactionData = {
+          supplier: { name: data?.supplier?.name, email: data?.supplier?.email },
+          company_email: user?.company_email,
+          created_by_email: user?.email,
+          created_by_name: user?.name,
+          payment_method,
+          amount,
+          payment_description,
+          transaction_desc: "purchases",
+          transaction_type: 'out',
+          created_at: data?.created_at,
+          invoice_id: invoiceId
+        };
+        const transactionResult = await transactionCollection.insertOne(
+          transactionData,
+          { session }
+        );
+  
+        if (!transactionResult?.insertedId) {
+          throw new Error("Something went wrong! Invoice was not created.");
+        }
+      }
     });
 
     res.send({ success: true, message: "Inventory updated successfully" });
