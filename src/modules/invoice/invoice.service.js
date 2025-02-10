@@ -17,7 +17,6 @@ const saveInvoiceToDB = async (data, user) => {
     return { success: false, message: "Please add customer Information" };
   }
 
-
   const session = client.startSession();
 
   try {
@@ -84,6 +83,16 @@ const saveInvoiceToDB = async (data, user) => {
     const revenueResult = await revenueCollection.insertOne(revenueData, {
       session,
     });
+
+    const invoiceResult = await invoiceCollection.insertOne(
+      (({ transaction_data, ...rest }) => rest)(data),
+      { session }
+    );
+
+    if (!invoiceResult?.insertedId) {
+      throw new Error("Something went wrong! Invoice was not created.");
+    }
+
     if (data?.transaction_data && data?.transaction_data?.amount > 0) {
       const { amount, payment_description, payment_method } =
         data?.transaction_data;
@@ -95,9 +104,10 @@ const saveInvoiceToDB = async (data, user) => {
         payment_method,
         amount,
         transaction_desc: "sales",
-        transaction_type: 'in',
+        transaction_type: "in",
         payment_description,
         created_at: data?.created_at,
+        invoice_id: invoiceResult?.insertedId,
       };
       const transactionResult = await transactionCollection.insertOne(
         transactionData,
@@ -110,15 +120,6 @@ const saveInvoiceToDB = async (data, user) => {
     }
 
     if (!revenueResult?.insertedId) {
-      throw new Error("Something went wrong! Invoice was not created.");
-    }
-
-    const result = await invoiceCollection.insertOne(
-      (({ transaction_data, ...rest }) => rest)(data),
-      { session }
-    );
-
-    if (!result?.insertedId) {
       throw new Error("Something went wrong! Invoice was not created.");
     }
 
