@@ -8,15 +8,15 @@ const {
 } = require("../../models/db");
 const { toFixedNumber } = require("../../utils/utility");
 
-
 const saveInvoiceToDB = async (data, user) => {
   if (!data?.products || data?.products.length === 0) {
     return { success: false, message: "Please add at least one product." };
   }
 
-  if (!data?.customer?.name) {
+  if (!data?.customer?.name || !data?.customer?.phone) {
     return { success: false, message: "Please add customer Information" };
   }
+
 
   const session = client.startSession();
 
@@ -84,12 +84,39 @@ const saveInvoiceToDB = async (data, user) => {
     const revenueResult = await revenueCollection.insertOne(revenueData, {
       session,
     });
+    if (data?.transaction_data && data?.transaction_data?.amount > 0) {
+      const { amount, payment_description, payment_method } =
+        data?.transaction_data;
+      const transactionData = {
+        customer: { name: data?.customer?.name, email: data?.customer?.email },
+        company_email: user?.company_email,
+        created_by_email: user?.email,
+        created_by_name: user?.name,
+        payment_method,
+        amount,
+        transaction_desc: "sales",
+        transaction_type: 'in',
+        payment_description,
+        created_at: data?.created_at,
+      };
+      const transactionResult = await transactionCollection.insertOne(
+        transactionData,
+        { session }
+      );
+
+      if (!transactionResult?.insertedId) {
+        throw new Error("Something went wrong! Invoice was not created.");
+      }
+    }
 
     if (!revenueResult?.insertedId) {
       throw new Error("Something went wrong! Invoice was not created.");
     }
 
-    const result = await invoiceCollection.insertOne(data, { session });
+    const result = await invoiceCollection.insertOne(
+      (({ transaction_data, ...rest }) => rest)(data),
+      { session }
+    );
 
     if (!result?.insertedId) {
       throw new Error("Something went wrong! Invoice was not created.");
@@ -184,7 +211,7 @@ const createTransactionToDB = async (id, data, user) => {
       return { success: false, message: "Transaction update failed." };
     }
 
-    const formattedData = new Date().toLocaleString();
+    const formattedDate = new Date().toLocaleString();
     const transactionData = {
       customer: { name, email },
       company_email: user?.company_email,
@@ -193,7 +220,7 @@ const createTransactionToDB = async (id, data, user) => {
       payment_method: data?.data?.payment_method,
       amount: data?.data?.amount,
       payment_description: data?.data?.payment_description,
-      created_at: formattedData,
+      created_at: formattedDate,
     };
 
     const transactionResult = await transactionCollection.insertOne(
