@@ -1,3 +1,4 @@
+const { toFixedNumber } = require("../../utils/utility");
 const userServices = require("../user/user.service");
 const {
   saveInvoiceToDB,
@@ -11,7 +12,22 @@ const createInvoice = async (req, res) => {
   const user = req.user;
   const data = req.body;
   const targetUser = await userServices.getUserDetails(user);
-  const discount = data?.total_cost.discount || 0;
+
+  const { total_cost } = data || {};
+  const discount = toFixedNumber(total_cost?.discount || 0);
+  const subtotal = toFixedNumber(total_cost?.subtotal || 0);
+  const tax = toFixedNumber(total_cost?.tax || 0);
+  const total = toFixedNumber(total_cost?.total || 0);
+  const total_paid = data?.transaction_data?.amount || 0;
+  const total_due = toFixedNumber(total - total_paid);
+
+  const status =
+    total_due === 0
+      ? "paid"
+      : total_due === total
+      ? "unpaid"
+      : "partially paid";
+
   const updatedData = {
     company: {
       name: targetUser?.company_name,
@@ -25,17 +41,16 @@ const createInvoice = async (req, res) => {
     created_by_email: user?.email,
     created_by_name: user?.name,
     cost_summary: {
-      subtotal: Number(data?.total_cost.subtotal.toFixed(2)),
-      total: Number(data?.total_cost?.total.toFixed(2)),
-      tax: Number(data?.total_cost?.tax.toFixed(2)),
-      discount: Number(discount.toFixed()),
-      total_paid: 0,
-      total_due:
-        Number(data?.total_cost?.total.toFixed(2)) -
-        Number(discount.toFixed(2)),
-      status: "unpaid",
+      subtotal,
+      total,
+      tax,
+      discount,
+      total_paid,
+      total_due,
+      status,
     },
     created_at: data?.created_at,
+    transaction_data: data?.transaction_data,
   };
 
   const result = await saveInvoiceToDB(updatedData, user);
