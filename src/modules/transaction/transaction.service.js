@@ -13,7 +13,9 @@ const saveTransactionToDB = async (data, user) => {
     ...data,
     company_email: user?.company_email,
     created_by_email: user?.email,
-    created_by_name: user?.name
+    created_by_name: user?.name,
+    transaction_desc: "sales",
+    transaction_type: 'in',
   };
   const result = await transactionCollection.insertOne(updatedData);
   return result;
