@@ -7,6 +7,7 @@ const {
 } = require("../../models/db");
 const { getSingleReport, deleteReport } = require("./inventory.service");
 const userServices = require("../user/user.service");
+const { toFixedNumber } = require("../../utils/utility");
 const addItems = async (req, res) => {
   const data = req.body;
   const user = req.user;
@@ -15,6 +16,18 @@ const addItems = async (req, res) => {
 
   if (!products || !Array.isArray(products)) {
     return res.status(400).json({ message: "Invalid products data" });
+  }
+  if (!products?.length) {
+    return res.send({
+      success: false,
+      message: "Please add at least one product",
+    });
+  }
+  if (!data?.supplier?.name) {
+    return res.send({
+      success: false,
+      message: "Please add supplier information",
+    });
   }
 
   const session = client.startSession();
@@ -64,9 +77,19 @@ const addItems = async (req, res) => {
       }
 
       // Add to inventory collection
+
+      const total = toFixedNumber(data?.total_cost?.total);
+      const paid = toFixedNumber(data?.total_cost?.paid) || 0;
+      const due = total - paid;
       const inventoryResult = await inventoryCollection.insertOne(
         {
           ...data,
+          total_cost: {
+            ...data?.total_cost,
+            total: total,
+            paid: paid,
+            due: toFixedNumber(due),
+          },
           company_email: user?.company_email,
           created_by_email: user?.email,
           created_by_name: user?.name,
@@ -79,18 +102,20 @@ const addItems = async (req, res) => {
         },
         { session }
       );
-      if(!inventoryResult?.insertedId){
-        throw new Error("Something went wrong")
+      if (!inventoryResult?.insertedId) {
+        throw new Error("Something went wrong");
       }
       const invoiceId = inventoryResult.insertedId;
-
 
       // start a transaction
       if (data?.transaction_data && data?.transaction_data?.amount > 0) {
         const { amount, payment_description, payment_method } =
           data?.transaction_data;
         const transactionData = {
-          supplier: { name: data?.supplier?.name, email: data?.supplier?.email },
+          supplier: {
+            name: data?.supplier?.name,
+            email: data?.supplier?.email,
+          },
           company_email: user?.company_email,
           created_by_email: user?.email,
           created_by_name: user?.name,
@@ -98,15 +123,15 @@ const addItems = async (req, res) => {
           amount,
           payment_description,
           transaction_desc: "purchases",
-          transaction_type: 'out',
+          transaction_type: "out",
           created_at: data?.created_at,
-          invoice_id: invoiceId
+          invoice_id: invoiceId,
         };
         const transactionResult = await transactionCollection.insertOne(
           transactionData,
           { session }
         );
-  
+
         if (!transactionResult?.insertedId) {
           throw new Error("Something went wrong! Invoice was not created.");
         }
