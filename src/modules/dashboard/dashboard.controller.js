@@ -1,5 +1,6 @@
 const { invoiceCollection, transactionCollection } = require("../../models/db");
 const { toFixedNumber } = require("../../utils/utility");
+const { getCurrencies } = require("./dashboard.service");
 
 const getDashboardData = async (req, res) => {
   try {
@@ -198,10 +199,23 @@ const getAccountingData = async (req, res) => {
         total_expense,
         total_sales,
         total_purchase,
-        other_costs
-      }
-    }
+        other_costs,
+      },
+    },
   });
 };
 
-module.exports = { getDashboardData,getAccountingData };
+const getCurrenciesData = async (req, res) => {
+  try {
+    const result = await getCurrencies();
+    return res.send({
+      success: true,
+      message: "Data Fetched Successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("error fetching data", error);
+  }
+};
+
+module.exports = { getDashboardData, getAccountingData, getCurrenciesData };
