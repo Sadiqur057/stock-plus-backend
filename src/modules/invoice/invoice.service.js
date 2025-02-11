@@ -222,6 +222,9 @@ const createTransactionToDB = async (id, data, user) => {
       amount: data?.data?.amount,
       payment_description: data?.data?.payment_description,
       created_at: formattedDate,
+      transaction_desc: "sales",
+      transaction_type: "in",
+      invoice_id: id,
     };
 
     const transactionResult = await transactionCollection.insertOne(
