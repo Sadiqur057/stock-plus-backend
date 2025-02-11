@@ -31,15 +31,16 @@ const registerNewUser = async (data) => {
       role: "user",
       company_email: email,
       isVerified: false,
+      currency_code: "BDT",
+      currency_name: "Bangladeshi Taka",
+      company_vat_rate: 0,
     };
 
     const result = await userCollection.insertOne(user);
-    const token = createToken(user);
     if (result?.insertedId) {
       return {
         success: true,
-        message: "Registration Successful.",
-        token: token,
+        message: "Registration Successful. Please login now.",
       };
     } else {
       return {
@@ -67,7 +68,15 @@ const verifyUserLogin = async (data) => {
     };
   }
   const token = createToken(user);
-  return { success: true, message: "Login Successful.", token: token };
+  return {
+    success: true,
+    message: "Login Successful.",
+    token: token,
+    currency: {
+      name: user?.currency_name,
+      code: user?.currency_code,
+    },
+  };
 };
 
 const authServices = { registerNewUser, verifyUserLogin };
