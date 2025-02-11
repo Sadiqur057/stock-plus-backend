@@ -212,6 +212,10 @@ const handleNewAttributes = async ({
     (attr) => !existingKeys.has(attr.key)
   );
 
+  if (!newAttributes.length) {
+    return { success: true };
+  }
+
   if (newAttributes?.length > 0) {
     const result = await attributeCollection.insertMany(
       newAttributes.map((attr) => ({
