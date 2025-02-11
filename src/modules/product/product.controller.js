@@ -1,5 +1,9 @@
 const { ObjectId } = require("mongodb");
-const { productCollection } = require("../../models/db");
+const {
+  productCollection,
+  attributeCollection,
+  client,
+} = require("../../models/db");
 const { getUserDetails } = require("../user/user.service");
 const productServices = require("./product.service");
 
@@ -17,36 +21,37 @@ const getProducts = async (req, res) => {
 const addProduct = async (req, res) => {
   const data = req.body;
   const user = req.user;
-  if (!data?.productName || !data?.company || !data?.quantity) {
+
+  if (!data?.productName || !data?.company) {
     return res.send({
       success: false,
-      message: "Please fill all the required field",
+      message: "Please fill all the required fields",
     });
   }
 
-  const targetUser = await getUserDetails(user);
-
-  const result = await productServices.addNewProduct(data, targetUser);
-
-  if (result?.insertedId) {
-    return res.send({
-      success: true,
-      message: "Product Added Successfully",
-      data: data,
-    });
-  } else {
-    return res.send({
-      success: false,
-      message: "Something went wrong! Please try again.",
-    });
-  }
+  const result = await productServices.addNewProduct(data, user);
+  console.log("lets", result);
+  return res.send(result);
 };
 
 const updateProduct = async (req, res) => {
   const data = req.body;
   const productId = req.params.id;
-  const result = await productServices.updateExistingProduct(data, productId);
-  return res.send(result);
+  const user = req.user;
+
+  if (!data || !productId) {
+    return res.send({
+      success: false,
+      message: "Missing required fields.",
+    });
+  }
+  console.log("checking", data);
+  const result = await productServices.updateExistingProduct(
+    data,
+    productId,
+    user
+  );
+  res.send(result);
 };
 
 const updateStock = async (req, res) => {
