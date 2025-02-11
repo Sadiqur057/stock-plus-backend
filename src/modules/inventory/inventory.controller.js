@@ -5,7 +5,11 @@ const {
   productCollection,
   transactionCollection,
 } = require("../../models/db");
-const { getSingleReport, deleteReport } = require("./inventory.service");
+const {
+  getSingleReport,
+  deleteReport,
+  saveInventoryTransactionToDB,
+} = require("./inventory.service");
 const userServices = require("../user/user.service");
 const { toFixedNumber } = require("../../utils/utility");
 const addItems = async (req, res) => {
@@ -81,6 +85,8 @@ const addItems = async (req, res) => {
       const total = toFixedNumber(data?.total_cost?.total);
       const paid = toFixedNumber(data?.total_cost?.paid) || 0;
       const due = total - paid;
+      const updatedStatus =
+        data?.transaction_data?.amount === due ? "paid" : "partially paid";
       const inventoryResult = await inventoryCollection.insertOne(
         {
           ...data,
@@ -89,6 +95,7 @@ const addItems = async (req, res) => {
             total: total,
             paid: paid,
             due: toFixedNumber(due),
+            status: updatedStatus,
           },
           company_email: user?.company_email,
           created_by_email: user?.email,
@@ -183,9 +190,20 @@ const deleteInventoryReport = async (req, res) => {
   res.send({ success: true, message: "Report deleted successfully" });
 };
 
+const createInventoryTransaction = async (req, res) => {
+  const id = req.params.id;
+  const user = req.user;
+  const data = req.body;
+  // console.log(id,data,user)
+
+  const result = await saveInventoryTransactionToDB(id, data, user);
+  res.send(result);
+};
+
 module.exports = {
   addItems,
   getItems,
   getInventoryReport,
   deleteInventoryReport,
+  createInventoryTransaction,
 };
