@@ -6,7 +6,7 @@ const getDashboardData = async (req, res) => {
   try {
     const { company_email } = req.user;
     const invoiceQuery = { company_email: company_email };
-    const transactionQuery = { company_email: company_email };
+    const transactionQuery = { company_email: company_email, transaction_desc: "sales" };
 
     // Fetch invoices and transactions
     const invoiceData = await invoiceCollection
