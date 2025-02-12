@@ -7,7 +7,7 @@ const {
 const { getProductDetails } = require("./product.controller");
 
 const getAllProducts = async (user, filters) => {
-  const { search, filter, sort } = filters;
+  const { search, filter, sort, limit, page } = filters;
   const query = { company_email: user?.company_email };
 
   if (filter && filter !== "all") {
@@ -41,10 +41,25 @@ const getAllProducts = async (user, filters) => {
     sortOptions = { created_at: -1 };
   }
 
-  const cursor = productCollection.find(query).sort(sortOptions);
+  const skip = (page - 1) * limit;
+  const cursor = productCollection
+    .find(query)
+    .sort(sortOptions)
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
   const result = await cursor.toArray();
+  const totalDocuments = await productCollection.countDocuments(query);
+  const totalPages = Math.ceil(totalDocuments / limit);
 
-  return result;
+  return {
+    success: true,
+    message: "product fetched successfully",
+    data: result,
+    pagination: {
+      totalPages,
+      totalDocuments,
+    },
+  };
 };
 
 const getSingleProduct = async (id) => {

@@ -1,21 +1,10 @@
-const { ObjectId } = require("mongodb");
-const {
-  productCollection,
-  attributeCollection,
-  client,
-} = require("../../models/db");
-const { getUserDetails } = require("../user/user.service");
 const productServices = require("./product.service");
 
 const getProducts = async (req, res) => {
   const user = req.user;
   const filters = req.query;
   const result = await productServices.getAllProducts(user, filters);
-  return res.send({
-    success: true,
-    message: "Successfully fetched data",
-    data: result,
-  });
+  return res.send(result);
 };
 
 const addProduct = async (req, res) => {

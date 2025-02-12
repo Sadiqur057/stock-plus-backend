@@ -8,18 +8,9 @@ const {
 
 const getTransactions = async (req, res) => {
   const user = req.user;
-  const result = await getAllTransaction(user);
-  if (!result) {
-    res.send({
-      success: false,
-      message: "No transaction found",
-    });
-  }
-  res.send({
-    success: true,
-    message: "Transaction fetched successfully",
-    data: result,
-  });
+  const params = req.query;
+  const result = await getAllTransaction(user, params);
+  res.send(result)
 };
 
 const addTransaction = async (req, res) => {
