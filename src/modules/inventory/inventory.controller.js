@@ -81,12 +81,13 @@ const addItems = async (req, res) => {
       }
 
       // Add to inventory collection
-
       const total = toFixedNumber(data?.total_cost?.total);
       const paid = toFixedNumber(data?.total_cost?.paid) || 0;
       const due = total - paid;
+      const payingAmount = Number(data?.transaction_data?.amount || 0);
       const updatedStatus =
-        data?.transaction_data?.amount === due ? "paid" : "partially paid";
+        due === 0 ? "paid" : payingAmount === 0 ? "unpaid" : "partially paid";
+
       const inventoryResult = await inventoryCollection.insertOne(
         {
           ...data,
@@ -158,18 +159,35 @@ const getItems = async (req, res) => {
   const user = req.user;
   const query = { company_email: user?.company_email };
   const cursor = inventoryCollection.find(query);
-  const result = await cursor.toArray();
-
-  if (!result) {
+  const result = await cursor.sort({ _id: -1 }).toArray();
+  let paid_invoice_count = 0;
+  if (result?.length) {
+    const total_invoice_amount = result?.reduce((sum, invoice) => {
+      if (invoice?.total_cost?.status === "paid") {
+        paid_invoice_count++;
+      }
+      return sum + (invoice?.total_cost?.total || 0);
+    }, 0);
+    const updatedData = {
+      invoices: result,
+      invoice_summary: {
+        invoice_count: result?.length,
+        total_invoice_amount: total_invoice_amount,
+        paid_invoice_count: paid_invoice_count,
+        due_invoice_count: result?.length - paid_invoice_count,
+      },
+    };
+    console.log("checking data", updatedData);
     return res.send({
-      success: false,
-      message: "No item found",
+      success: true,
+      message: "Inventory fetched successfully",
+      data: updatedData,
     });
   }
+
   return res.send({
-    success: true,
-    message: "Inventory fetched successfully",
-    data: result,
+    success: false,
+    message: "No item found",
   });
 };
 
@@ -194,7 +212,6 @@ const createInventoryTransaction = async (req, res) => {
   const id = req.params.id;
   const user = req.user;
   const data = req.body;
-  // console.log(id,data,user)
 
   const result = await saveInventoryTransactionToDB(id, data, user);
   res.send(result);
