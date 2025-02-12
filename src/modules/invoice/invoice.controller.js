@@ -62,35 +62,9 @@ const createInvoice = async (req, res) => {
 
 const getInvoices = async (req, res) => {
   const user = req.user;
-  const result = await getAllInvoices(user);
-  let paid_invoice_count = 0;
-  const total_invoice_amount = result?.reduce((sum, invoice) => {
-    if (invoice?.cost_summary?.status === "paid") {
-      paid_invoice_count++;
-    }
-    return sum + (invoice?.cost_summary?.total || 0);
-  }, 0);
-  const updatedData = {
-    invoices: result,
-    invoice_summary: {
-      invoice_count: result?.length,
-      total_invoice_amount: total_invoice_amount,
-      paid_invoice_count: paid_invoice_count,
-      due_invoice_count: result?.length - paid_invoice_count,
-    },
-  };
-
-  if (result.length < 0) {
-    return res.send({
-      success: false,
-      message: "No Invoices Found",
-    });
-  }
-  res.send({
-    success: true,
-    message: "Invoices fetched successfully",
-    data: updatedData,
-  });
+  const params = req.query;
+  const result = await getAllInvoices(user, params);
+  res.send(result);
 };
 
 const getInvoice = async (req, res) => {

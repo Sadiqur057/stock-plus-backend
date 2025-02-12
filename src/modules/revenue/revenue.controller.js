@@ -8,18 +8,9 @@ const {
 
 const getRevenues = async (req, res) => {
   const user = req.user;
-  const result = await getAllRevenue(user);
-  if (!result) {
-    res.send({
-      success: false,
-      message: "No revenue found",
-    });
-  }
-  res.send({
-    success: true,
-    message: "Revenue fetched successfully",
-    data: result,
-  });
+  const params = req.query;
+  const result = await getAllRevenue(user, params);
+  return res.send(result);
 };
 
 const addRevenue = async (req, res) => {

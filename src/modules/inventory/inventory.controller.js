@@ -12,6 +12,7 @@ const {
 } = require("./inventory.service");
 const userServices = require("../user/user.service");
 const { toFixedNumber } = require("../../utils/utility");
+
 const addItems = async (req, res) => {
   const data = req.body;
   const user = req.user;
@@ -157,11 +158,21 @@ const addItems = async (req, res) => {
 
 const getItems = async (req, res) => {
   const user = req.user;
+  const { page, limit } = req?.query;
   const query = { company_email: user?.company_email };
-  const cursor = inventoryCollection.find(query);
-  const result = await cursor.sort({ _id: -1 }).toArray();
+  const skip = (page - 1) * limit;
+  const cursor = inventoryCollection
+    .find(query)
+    .skip(skip)
+    .limit(parseInt(limit))
+    .sort({ _id: -1 });
+  const result = await cursor.toArray();
   let paid_invoice_count = 0;
   if (result?.length) {
+
+    const totalDocuments = await inventoryCollection.countDocuments(query)
+    const totalPages = Math.ceil(totalDocuments / limit);
+    
     const total_invoice_amount = result?.reduce((sum, invoice) => {
       if (invoice?.total_cost?.status === "paid") {
         paid_invoice_count++;
@@ -176,8 +187,11 @@ const getItems = async (req, res) => {
         paid_invoice_count: paid_invoice_count,
         due_invoice_count: result?.length - paid_invoice_count,
       },
+      pagination: {
+        totalPages,
+        totalDocuments,
+      },
     };
-    console.log("checking data", updatedData);
     return res.send({
       success: true,
       message: "Inventory fetched successfully",

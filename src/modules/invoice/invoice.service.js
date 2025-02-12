@@ -137,11 +137,51 @@ const saveInvoiceToDB = async (data, user) => {
   }
 };
 
-const getAllInvoices = async (user) => {
+const getAllInvoices = async (user, params) => {
   const query = { company_email: user?.company_email };
-  const cursor = invoiceCollection.find(query).sort({ _id: -1 });
+  const { limit, page } = params;
+  const skip = (page - 1) * limit;
+  const cursor = invoiceCollection
+    .find(query)
+    .skip(parseInt(skip))
+    .limit(parseInt(limit))
+    .sort({ _id: -1 });
   const result = await cursor.toArray();
-  return result;
+  const totalDocuments = await invoiceCollection.countDocuments(query);
+  const totalPages = Math.ceil(totalDocuments / limit);
+  if (!result) {
+    return {
+      data: result,
+      success: false,
+      message: "No Invoice found.",
+    };
+  }
+
+  let paid_invoice_count = 0;
+  const total_invoice_amount = result?.reduce((sum, invoice) => {
+    if (invoice?.cost_summary?.status === "paid") {
+      paid_invoice_count++;
+    }
+    return sum + (invoice?.cost_summary?.total || 0);
+  }, 0);
+  const updatedData = {
+    invoices: result,
+    invoice_summary: {
+      invoice_count: result?.length,
+      total_invoice_amount: total_invoice_amount,
+      paid_invoice_count: paid_invoice_count,
+      due_invoice_count: result?.length - paid_invoice_count,
+    },
+    pagination: {
+      totalDocuments,
+      totalPages
+    }
+  };
+  return {
+    success: true,
+    message: "Invoices fetched successfully",
+    data: updatedData,
+  };
 };
 
 const getInvoiceDetails = async (id) => {

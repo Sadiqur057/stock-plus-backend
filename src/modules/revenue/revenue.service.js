@@ -1,11 +1,38 @@
 const { ObjectId } = require("mongodb");
 const { revenueCollection } = require("../../models/db");
 
-const getAllRevenue = async (user) => {
+const getAllRevenue = async (user, params) => {
   const query = { company_email: user?.company_email };
-  const cursor = revenueCollection.find(query).sort({ _id: -1 });
+  const { limit, page } = params;
+  const skip = (page - 1) * limit;
+  const cursor = revenueCollection
+    .find(query)
+    .limit(parseInt(limit))
+    .skip(skip)
+    .sort({ _id: -1 });
   const result = await cursor.toArray();
-  return result;
+  if (!result) {
+    return {
+      success: false,
+      message: "No revenue found",
+    };
+  }
+  const countDocuments = await revenueCollection.countDocuments(query);
+  const totalPages = Math.ceil(countDocuments / limit);
+  const updatedData = {
+    revenues: result,
+    success: true,
+    message: "Revenues fetched successfully",
+    pagination: {
+      countDocuments,
+      totalPages,
+    },
+  };
+  return {
+    success: true,
+    message: "Revenue fetched successfully",
+    data: updatedData,
+  };
 };
 
 const saveRevenueToDB = async (data, user) => {
@@ -13,7 +40,7 @@ const saveRevenueToDB = async (data, user) => {
     ...data,
     company_email: user?.company_email,
     created_by_email: user?.email,
-    created_by_name: user?.name
+    created_by_name: user?.name,
   };
   const result = await revenueCollection.insertOne(updatedData);
   return result;
