@@ -11,7 +11,11 @@ const {
   saveInventoryTransactionToDB,
 } = require("./inventory.service");
 const userServices = require("../user/user.service");
-const { toFixedNumber } = require("../../utils/utility");
+const {
+  toFixedNumber,
+  getDurationDates,
+  toISOStringDate,
+} = require("../../utils/utility");
 
 const addItems = async (req, res) => {
   const data = req.body;
@@ -158,8 +162,39 @@ const addItems = async (req, res) => {
 
 const getItems = async (req, res) => {
   const user = req.user;
-  const { page, limit } = req?.query;
-  const query = { company_email: user?.company_email };
+  const {
+    page,
+    limit,
+    start_date,
+    end_date,
+    customer_phone,
+    duration,
+    status,
+  } = req?.query;
+
+  let query = { company_email: user?.company_email };
+
+  if (customer_phone) {
+    query["customer.phone"] = customer_phone;
+  }
+
+  if (status && status !== "all") {
+    console.log(status);
+    query["total_cost.status"] = status;
+  }
+
+  if (start_date && end_date) {
+    query.created_at = {
+      $gte: toISOStringDate(start_date),
+      $lte: toISOStringDate(end_date),
+    };
+  } else if (duration) {
+    const dateRange = getDurationDates(duration);
+    if (dateRange) {
+      query.created_at = dateRange;
+    }
+  }
+
   const skip = (page - 1) * limit;
   const cursor = inventoryCollection
     .find(query)
@@ -169,10 +204,9 @@ const getItems = async (req, res) => {
   const result = await cursor.toArray();
   let paid_invoice_count = 0;
   if (result?.length) {
-
-    const totalDocuments = await inventoryCollection.countDocuments(query)
+    const totalDocuments = await inventoryCollection.countDocuments(query);
     const totalPages = Math.ceil(totalDocuments / limit);
-    
+
     const total_invoice_amount = result?.reduce((sum, invoice) => {
       if (invoice?.total_cost?.status === "paid") {
         paid_invoice_count++;
