@@ -1,21 +1,49 @@
 const { invoiceCollection, transactionCollection } = require("../../models/db");
-const { toFixedNumber } = require("../../utils/utility");
+const { toFixedNumber, toISOStringDate, getDurationDates } = require("../../utils/utility");
 const { getCurrencies } = require("./dashboard.service");
 
 const getDashboardData = async (req, res) => {
   try {
     const { company_email } = req.user;
-    const invoiceQuery = { company_email: company_email };
-    const transactionQuery = { company_email: company_email, transaction_desc: "sales" };
+    const { start_date, end_date, customer_phone, duration } = req.query || {};
+    console.log(req.query)
 
-    // Fetch invoices and transactions
+    let invoiceQuery = { company_email: company_email };
+    let transactionQuery = {
+      company_email: company_email,
+      transaction_desc: "sales",
+    };
+    if (req?.query?.customer_phone) {
+      invoiceQuery["customer.phone"] = customer_phone;
+      transactionQuery["customer.phone"] = customer_phone;
+    }
+
+    if (start_date && end_date) {
+      invoiceQuery.created_at = {
+        $gte: toISOStringDate(start_date),
+        $lte: toISOStringDate(end_date),
+      };
+      transactionQuery.created_at = {
+        $gte: toISOStringDate(start_date),
+        $lte: toISOStringDate(end_date),
+      };
+    } else if (duration) {
+      const dateRange = getDurationDates(duration);
+      console.log(dateRange)
+      if (dateRange) {
+        invoiceQuery.created_at = dateRange;
+        transactionQuery.created_at = dateRange;
+      }
+    }
+
+    // Fetch invoices
     const invoiceData = await invoiceCollection
       .find(invoiceQuery)
-      .sort({ _id: -1 })
+      .sort({ created_at: -1 })
       .toArray();
     const transactionData = await transactionCollection
       .find(transactionQuery)
-      .sort({ _id: -1 })
+      .sort({ created_at: -1 })
       .toArray();
 
     // Calculate summary
@@ -125,8 +153,8 @@ const getDashboardData = async (req, res) => {
 
     // Prepare response data
     const data = {
-      invoices: invoiceData,
-      transactions: transactionData,
+      invoices: invoiceData?.slice(0,5), 
+      transactions: transactionData?.slice(0,5), 
       summary: {
         invoice_count,
         total_payment,
