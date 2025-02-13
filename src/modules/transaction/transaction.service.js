@@ -19,14 +19,17 @@ const getAllTransaction = async (user, params) => {
   }
   const totalDocuments = await transactionCollection.countDocuments(query);
   const totalPages = Math.ceil(totalDocuments / limit);
-  return{
-    success: true,
-    message: "Transaction fetched successfully",
-    data: result,
+  const updatedData = {
+    transactions: result,
     pagination: {
       totalPages,
       totalDocuments,
     },
+  }
+  return{
+    success: true,
+    message: "Transaction fetched successfully",
+    data: updatedData,
   };
 
 };
