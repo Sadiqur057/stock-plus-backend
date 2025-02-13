@@ -6,7 +6,7 @@ const {
   productCollection,
   revenueCollection,
 } = require("../../models/db");
-const { toFixedNumber } = require("../../utils/utility");
+const { toFixedNumber, getDurationDates, toISOStringDate } = require("../../utils/utility");
 
 const saveInvoiceToDB = async (data, user) => {
   if (!data?.products || data?.products.length === 0) {
@@ -137,8 +137,27 @@ const saveInvoiceToDB = async (data, user) => {
 };
 
 const getAllInvoices = async (user, params) => {
-  const query = { company_email: user?.company_email };
-  const { limit, page } = params;
+  const { limit, page, start_date, end_date, customer_phone, duration } = params || {};
+
+  let query = { company_email: user?.company_email };
+
+  if (params?.customer_phone) {
+    query["customer.phone"] = customer_phone;
+  }
+
+  if (start_date && end_date) {
+    query.created_at = {
+      $gte: toISOStringDate(start_date),
+      $lte: toISOStringDate(end_date),
+    };
+  } else if (duration) {
+    const dateRange = getDurationDates(duration);
+    if (dateRange) {
+      query.created_at = dateRange;
+    }
+  }
+
+  console.log(params)
   const skip = (page - 1) * limit;
   const cursor = invoiceCollection
     .find(query)
