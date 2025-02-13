@@ -75,8 +75,7 @@ const saveInvoiceToDB = async (data, user) => {
       company_email: user?.company_email,
       created_by_email: user?.email,
       created_by_name: user?.name,
-      customer_name: data?.customer?.name,
-      customer_email: data?.customer?.email,
+      customer: data?.customer,
       products: data?.products,
     };
 
@@ -174,8 +173,8 @@ const getAllInvoices = async (user, params) => {
     },
     pagination: {
       totalDocuments,
-      totalPages
-    }
+      totalPages,
+    },
   };
   return {
     success: true,
