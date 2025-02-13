@@ -40,7 +40,7 @@ const createInvoice = async (req, res) => {
     company_email: user?.company_email,
     created_by_email: user?.email,
     created_by_name: user?.name,
-    cost_summary: {
+    total_cost: {
       subtotal,
       total,
       tax,

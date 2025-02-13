@@ -68,7 +68,7 @@ const getDashboardData = async (req, res) => {
     let revenueStats = {};
 
     invoiceData.forEach((invoice) => {
-      const costSummary = invoice.cost_summary || {};
+      const costSummary = invoice.total_cost || {};
       const customerId = invoice.customer?._id;
 
       if (customerId) {

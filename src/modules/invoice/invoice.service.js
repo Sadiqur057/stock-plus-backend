@@ -6,7 +6,11 @@ const {
   productCollection,
   revenueCollection,
 } = require("../../models/db");
-const { toFixedNumber, getDurationDates, toISOStringDate } = require("../../utils/utility");
+const {
+  toFixedNumber,
+  getDurationDates,
+  toISOStringDate,
+} = require("../../utils/utility");
 
 const saveInvoiceToDB = async (data, user) => {
   if (!data?.products || data?.products.length === 0) {
@@ -58,12 +62,12 @@ const saveInvoiceToDB = async (data, user) => {
       }
     }
 
-    const updatedRevenue = totalRevenue - data?.cost_summary?.discount;
-    const total_cost = data?.cost_summary?.total;
+    const updatedRevenue = totalRevenue - data?.total_cost?.discount;
+    const total_cost = data?.total_cost?.total;
     const revenue_percentage = (updatedRevenue / total_cost) * 100;
 
-    data.cost_summary.revenue = updatedRevenue;
-    data.cost_summary.revenue_percentage = Number(
+    data.total_cost.revenue = updatedRevenue;
+    data.total_cost.revenue_percentage = Number(
       revenue_percentage.toFixed(2)
     );
 
@@ -137,12 +141,25 @@ const saveInvoiceToDB = async (data, user) => {
 };
 
 const getAllInvoices = async (user, params) => {
-  const { limit, page, start_date, end_date, customer_phone, duration } = params || {};
+  const {
+    limit,
+    page,
+    start_date,
+    end_date,
+    customer_phone,
+    duration,
+    status,
+  } = params || {};
 
   let query = { company_email: user?.company_email };
 
   if (params?.customer_phone) {
     query["customer.phone"] = customer_phone;
+  }
+
+  if (status && status !== "all") {
+    console.log(status);
+    query["total_cost.status"] = status;
   }
 
   if (start_date && end_date) {
@@ -157,7 +174,7 @@ const getAllInvoices = async (user, params) => {
     }
   }
 
-  console.log(params)
+  console.log(params);
   const skip = (page - 1) * limit;
   const cursor = invoiceCollection
     .find(query)
@@ -177,10 +194,10 @@ const getAllInvoices = async (user, params) => {
 
   let paid_invoice_count = 0;
   const total_invoice_amount = result?.reduce((sum, invoice) => {
-    if (invoice?.cost_summary?.status === "paid") {
+    if (invoice?.total_cost?.status === "paid") {
       paid_invoice_count++;
     }
-    return sum + (invoice?.cost_summary?.total || 0);
+    return sum + (invoice?.total_cost?.total || 0);
   }, 0);
   const updatedData = {
     invoices: result,
@@ -238,7 +255,7 @@ const createTransactionToDB = async (id, data, user) => {
     }
 
     const { name, email } = targetInvoice?.customer;
-    const { total_due, total_paid } = targetInvoice?.cost_summary;
+    const { total_due, total_paid } = targetInvoice?.total_cost;
 
     if (amount > total_due) {
       await session.abortTransaction();
@@ -254,8 +271,8 @@ const createTransactionToDB = async (id, data, user) => {
       filter,
       {
         $set: {
-          cost_summary: {
-            ...targetInvoice?.cost_summary,
+          total_cost: {
+            ...targetInvoice?.total_cost,
             total_paid: toFixedNumber(total_paid + amount),
             total_due: toFixedNumber(total_due - amount),
             status: updatedStatus,
