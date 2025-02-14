@@ -237,7 +237,7 @@ const getAccountingData = async (req, res) => {
     } else if (transaction.transaction_desc === "purchases") {
       total_purchase += transaction.amount;
       invoiceStats[monthYear].expense += transaction.amount || 0;
-    } else if (transaction.transaction_desc === "others") {
+    } else if (transaction.transaction_desc === "other") {
       other_costs += transaction.amount;
       invoiceStats[monthYear].expense += transaction.amount || 0;
     }
