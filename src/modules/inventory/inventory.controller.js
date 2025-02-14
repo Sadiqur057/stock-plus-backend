@@ -167,15 +167,15 @@ const getItems = async (req, res) => {
     limit,
     start_date,
     end_date,
-    customer_phone,
+    supplier_phone,
     duration,
     status,
   } = req?.query;
 
   let query = { company_email: user?.company_email };
 
-  if (customer_phone) {
-    query["customer.phone"] = customer_phone;
+  if (supplier_phone) {
+    query["supplier.phone"] = supplier_phone;
   }
 
   if (status && status !== "all") {
