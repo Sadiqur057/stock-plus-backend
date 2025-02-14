@@ -128,6 +128,7 @@ const addItems = async (req, res) => {
           supplier: {
             name: data?.supplier?.name,
             email: data?.supplier?.email,
+            phone: data?.supplier?.phone,
           },
           company_email: user?.company_email,
           created_by_email: user?.email,

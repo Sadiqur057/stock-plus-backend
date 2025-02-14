@@ -98,7 +98,11 @@ const saveInvoiceToDB = async (data, user) => {
       const { amount, payment_description, payment_method } =
         data?.transaction_data;
       const transactionData = {
-        customer: { name: data?.customer?.name, email: data?.customer?.email },
+        customer: {
+          name: data?.customer?.name,
+          email: data?.customer?.email,
+          phone: data?.customer?.phone,
+        },
         company_email: user?.company_email,
         created_by_email: user?.email,
         created_by_name: user?.name,
@@ -248,7 +252,7 @@ const createTransactionToDB = async (id, data, user) => {
       return { success: false, message: "Invoice not found." };
     }
 
-    const { name, email } = targetInvoice?.customer;
+    const { name, email, phone } = targetInvoice?.customer;
     const { total_due, total_paid } = targetInvoice?.total_cost;
 
     if (amount > total_due) {
@@ -283,7 +287,7 @@ const createTransactionToDB = async (id, data, user) => {
 
     const formattedDate = new Date().toLocaleString();
     const transactionData = {
-      customer: { name, email },
+      customer: { name, email, phone },
       company_email: user?.company_email,
       created_by_email: user?.email,
       created_by_name: user?.name,

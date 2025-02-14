@@ -1,5 +1,9 @@
 const { ObjectId } = require("mongodb");
-const { inventoryCollection, client, transactionCollection } = require("../../models/db");
+const {
+  inventoryCollection,
+  client,
+  transactionCollection,
+} = require("../../models/db");
 const { toFixedNumber } = require("../../utils/utility");
 
 const getSingleReport = async (id) => {
@@ -41,7 +45,7 @@ const saveInventoryTransactionToDB = async (id, data, user) => {
       return { success: false, message: "Invoice not found." };
     }
 
-    const { name, email } = targetInvoice?.supplier;
+    const { name, email, phone } = targetInvoice?.supplier;
     const { due, paid } = targetInvoice?.total_cost;
     if (amount > due) {
       await session.abortTransaction();
@@ -75,7 +79,7 @@ const saveInventoryTransactionToDB = async (id, data, user) => {
 
     const formattedDate = new Date().toLocaleString();
     const transactionData = {
-      supplier: { name, email },
+      supplier: { name, email, phone },
       company_email: user?.company_email,
       created_by_email: user?.email,
       created_by_name: user?.name,
