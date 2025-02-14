@@ -25,7 +25,7 @@ const getAllProducts = async (user, filters) => {
     ];
   }
 
-  let sortOptions = { _id: -1 };
+  let sortOptions = { created_at: -1 };
 
   if (sort === "price-asc") {
     sortOptions = { salePrice: 1 };
