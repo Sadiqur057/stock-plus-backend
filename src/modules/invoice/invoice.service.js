@@ -67,9 +67,7 @@ const saveInvoiceToDB = async (data, user) => {
     const revenue_percentage = (updatedRevenue / total_cost) * 100;
 
     data.total_cost.revenue = updatedRevenue;
-    data.total_cost.revenue_percentage = Number(
-      revenue_percentage.toFixed(2)
-    );
+    data.total_cost.revenue_percentage = Number(revenue_percentage.toFixed(2));
 
     const revenueData = {
       total_cost,
@@ -158,7 +156,6 @@ const getAllInvoices = async (user, params) => {
   }
 
   if (status && status !== "all") {
-    console.log(status);
     query["total_cost.status"] = status;
   }
 
@@ -173,14 +170,12 @@ const getAllInvoices = async (user, params) => {
       query.created_at = dateRange;
     }
   }
-
-  console.log(params);
   const skip = (page - 1) * limit;
   const cursor = invoiceCollection
     .find(query)
     .skip(parseInt(skip))
     .limit(parseInt(limit))
-    .sort({ _id: -1 });
+    .sort({ created_at: -1 });
   const result = await cursor.toArray();
   const totalDocuments = await invoiceCollection.countDocuments(query);
   const totalPages = Math.ceil(totalDocuments / limit);
@@ -192,20 +187,19 @@ const getAllInvoices = async (user, params) => {
     };
   }
 
-  let paid_invoice_count = 0;
+  let paid_amount = 0;
   const total_invoice_amount = result?.reduce((sum, invoice) => {
-    if (invoice?.total_cost?.status === "paid") {
-      paid_invoice_count++;
-    }
+    paid_amount = paid_amount + (invoice?.total_cost?.total_paid || 0);
     return sum + (invoice?.total_cost?.total || 0);
   }, 0);
+
   const updatedData = {
     invoices: result,
     invoice_summary: {
       invoice_count: result?.length,
       total_invoice_amount: total_invoice_amount,
-      paid_invoice_count: paid_invoice_count,
-      due_invoice_count: result?.length - paid_invoice_count,
+      total_paid_amount: paid_amount,
+      total_due_amount: toFixedNumber(total_invoice_amount - paid_amount || 0),
     },
     pagination: {
       totalDocuments,

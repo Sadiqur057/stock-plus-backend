@@ -179,7 +179,6 @@ const getItems = async (req, res) => {
   }
 
   if (status && status !== "all") {
-    console.log(status);
     query["total_cost.status"] = status;
   }
 
@@ -200,17 +199,15 @@ const getItems = async (req, res) => {
     .find(query)
     .skip(skip)
     .limit(parseInt(limit))
-    .sort({ _id: -1 });
+    .sort({ created_at: -1 });
   const result = await cursor.toArray();
-  let paid_invoice_count = 0;
+  let paid_amount = 0;
   if (result?.length) {
     const totalDocuments = await inventoryCollection.countDocuments(query);
     const totalPages = Math.ceil(totalDocuments / limit);
 
     const total_invoice_amount = result?.reduce((sum, invoice) => {
-      if (invoice?.total_cost?.status === "paid") {
-        paid_invoice_count++;
-      }
+      paid_amount = paid_amount + (invoice?.total_cost?.paid || 0);
       return sum + (invoice?.total_cost?.total || 0);
     }, 0);
     const updatedData = {
@@ -218,8 +215,10 @@ const getItems = async (req, res) => {
       invoice_summary: {
         invoice_count: result?.length,
         total_invoice_amount: total_invoice_amount,
-        paid_invoice_count: paid_invoice_count,
-        due_invoice_count: result?.length - paid_invoice_count,
+        total_paid_amount: paid_amount,
+        total_due_amount: toFixedNumber(
+          total_invoice_amount - paid_amount || 0
+        ),
       },
       pagination: {
         totalPages,
