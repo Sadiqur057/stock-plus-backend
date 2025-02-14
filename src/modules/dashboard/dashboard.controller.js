@@ -163,9 +163,9 @@ const getDashboardData = async (req, res) => {
         transaction_count,
         total_sell: total_payment + due_invoice_amount,
       },
-      invoiceChartData,
-      paymentChartData,
-      revenueChartData,
+      invoiceChartData: invoiceChartData.slice(0, 12),
+      paymentChartData: paymentChartData.slice(0, 12),
+      revenueChartData: revenueChartData.slice(0, 12),
     };
 
     return res.status(200).send({
@@ -259,7 +259,7 @@ const getAccountingData = async (req, res) => {
     message: "Data fetched successfully",
     data: {
       transactions,
-      chartData: invoiceChartData,
+      chartData: invoiceChartData.slice(0, 12),
       summary: {
         profit,
         profit_percentage,
