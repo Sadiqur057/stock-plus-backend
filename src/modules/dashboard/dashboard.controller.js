@@ -1,12 +1,15 @@
 const { invoiceCollection, transactionCollection } = require("../../models/db");
-const { toFixedNumber, toISOStringDate, getDurationDates } = require("../../utils/utility");
+const {
+  toFixedNumber,
+  toISOStringDate,
+  getDurationDates,
+} = require("../../utils/utility");
 const { getCurrencies } = require("./dashboard.service");
 
 const getDashboardData = async (req, res) => {
   try {
     const { company_email } = req.user;
     const { start_date, end_date, customer_phone, duration } = req.query || {};
-    console.log(req.query)
 
     let invoiceQuery = { company_email: company_email };
     let transactionQuery = {
@@ -29,7 +32,7 @@ const getDashboardData = async (req, res) => {
       };
     } else if (duration) {
       const dateRange = getDurationDates(duration);
-      console.log(dateRange)
+      console.log(dateRange);
       if (dateRange) {
         invoiceQuery.created_at = dateRange;
         transactionQuery.created_at = dateRange;
@@ -62,18 +65,12 @@ const getDashboardData = async (req, res) => {
     let total_invoice_amount = 0;
     let total_revenue_amount = 0;
 
-    let uniqueCustomers = new Set();
     let invoiceStats = {};
     let paymentStats = {};
     let revenueStats = {};
 
     invoiceData.forEach((invoice) => {
       const costSummary = invoice.total_cost || {};
-      const customerId = invoice.customer?._id;
-
-      if (customerId) {
-        uniqueCustomers.add(customerId.toString());
-      }
 
       // Extract month and year from `created_at`
       const invoiceDate = new Date(invoice.created_at);
@@ -153,8 +150,8 @@ const getDashboardData = async (req, res) => {
 
     // Prepare response data
     const data = {
-      invoices: invoiceData?.slice(0,5), 
-      transactions: transactionData?.slice(0,5), 
+      invoices: invoiceData?.slice(0, 5),
+      transactions: transactionData?.slice(0, 5),
       summary: {
         invoice_count,
         total_payment,
@@ -165,7 +162,6 @@ const getDashboardData = async (req, res) => {
         total_revenue_amount,
         transaction_count,
         total_sell: total_payment + due_invoice_amount,
-        customer_count: uniqueCustomers.size,
       },
       invoiceChartData,
       paymentChartData,
@@ -188,7 +184,22 @@ const getDashboardData = async (req, res) => {
 
 const getAccountingData = async (req, res) => {
   const user = req.user;
+  const { start_date, end_date, customer_phone, duration } = req.query || {};
   const query = { company_email: user?.company_email };
+
+  if (start_date && end_date) {
+    query.created_at = {
+      $gte: toISOStringDate(start_date),
+      $lte: toISOStringDate(end_date),
+    };
+  } else if (duration) {
+    const dateRange = getDurationDates(duration);
+    console.log(dateRange);
+    if (dateRange) {
+      query.created_at = dateRange;
+    }
+  }
+
   const cursor = transactionCollection.find(query);
   const transactions = await cursor.toArray();
 
@@ -203,24 +214,52 @@ const getAccountingData = async (req, res) => {
   let total_purchase = 0;
   let other_costs = 0;
 
+  let invoiceStats = {};
+
   transactions.forEach((transaction) => {
+    // Extract month and year from `created_at`
+    const invoiceDate = new Date(transaction.created_at);
+    const month = invoiceDate.toLocaleString("en-US", { month: "short" });
+    const year = invoiceDate.getFullYear();
+    const monthYear = `${month}-${year}`;
+
+    // Initialize month data if not exists
+    if (!invoiceStats[monthYear]) {
+      invoiceStats[monthYear] = {
+        expense: 0,
+        sales: 0,
+      };
+    }
+
     if (transaction.transaction_desc === "sales") {
+      invoiceStats[monthYear].sales += transaction.amount || 0;
       total_sales += transaction.amount;
     } else if (transaction.transaction_desc === "purchases") {
       total_purchase += transaction.amount;
+      invoiceStats[monthYear].expense += transaction.amount || 0;
     } else if (transaction.transaction_desc === "others") {
       other_costs += transaction.amount;
+      invoiceStats[monthYear].expense += transaction.amount || 0;
     }
   });
   const total_expense = toFixedNumber(total_purchase + other_costs);
   const profit = toFixedNumber(total_sales - total_expense);
   const profit_percentage = toFixedNumber((profit / total_expense) * 100);
 
+  const invoiceChartData = Object.keys(invoiceStats)
+    .map((monthYear) => ({
+      name: monthYear,
+      sales: invoiceStats[monthYear].sales,
+      expense: invoiceStats[monthYear].expense,
+    }))
+    .sort((a, b) => new Date(b.name) - new Date(a.name));
+
   res.send({
     success: true,
     message: "Data fetched successfully",
     data: {
       transactions,
+      chartData: invoiceChartData,
       summary: {
         profit,
         profit_percentage,
