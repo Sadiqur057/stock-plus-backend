@@ -184,7 +184,7 @@ const getDashboardData = async (req, res) => {
 
 const getAccountingData = async (req, res) => {
   const user = req.user;
-  const { start_date, end_date, customer_phone, duration } = req.query || {};
+  const { start_date, end_date, duration } = req.query || {};
   const query = { company_email: user?.company_email };
 
   if (start_date && end_date) {
