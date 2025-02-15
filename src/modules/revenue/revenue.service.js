@@ -2,8 +2,26 @@ const { ObjectId } = require("mongodb");
 const { revenueCollection } = require("../../models/db");
 
 const getAllRevenue = async (user, params) => {
+  const { limit, page, start_date, end_date, customer_phone, duration } =
+    params;
   const query = { company_email: user?.company_email };
-  const { limit, page } = params;
+
+  if (params?.customer_phone) {
+    query["customer.phone"] = customer_phone;
+  }
+
+  if (start_date && end_date) {
+    query.created_at = {
+      $gte: toISOStringDate(start_date),
+      $lte: toISOStringDate(end_date),
+    };
+  } else if (duration) {
+    const dateRange = getDurationDates(duration);
+    if (dateRange) {
+      query.created_at = dateRange;
+    }
+  }
+
   const skip = (page - 1) * limit;
   const cursor = revenueCollection
     .find(query)

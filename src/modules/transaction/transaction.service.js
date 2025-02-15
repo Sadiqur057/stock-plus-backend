@@ -1,10 +1,36 @@
 const { ObjectId } = require("mongodb");
 const { transactionCollection } = require("../../models/db");
+const { getDurationDates, toISOStringDate } = require("../../utils/utility");
 
 const getAllTransaction = async (user, params) => {
   const query = { company_email: user?.company_email };
-  const { limit, page } = params;
+  const {
+    limit,
+    page,
+    payment_method,
+    payment_type,
+    start_date,
+    end_date,
+    duration,
+  } = params;
   const skip = (page - 1) * limit;
+  if (payment_method && payment_method!=="all") {
+    query.payment_method = payment_method;
+  }
+  if (payment_type && payment_type!=="all") {
+    query.transaction_desc = payment_type;
+  }
+  if (start_date && end_date) {
+    query.created_at = {
+      $gte: toISOStringDate(start_date),
+      $lte: toISOStringDate(end_date),
+    };
+  } else if (duration) {
+    const dateRange = getDurationDates(duration);
+    if (dateRange) {
+      query.created_at = dateRange;
+    }
+  }
   const cursor = transactionCollection
     .find(query)
     .limit(parseInt(limit))
@@ -42,7 +68,6 @@ const saveTransactionToDB = async (data, user) => {
     transaction_desc: data?.transaction_desc || "sales",
     transaction_type: data?.transaction_type || "in",
   };
-  console.log(updatedData);
   const result = await transactionCollection.insertOne(updatedData);
   return result;
 };
