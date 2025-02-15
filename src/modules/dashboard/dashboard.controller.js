@@ -1,4 +1,8 @@
-const { invoiceCollection, transactionCollection } = require("../../models/db");
+const {
+  invoiceCollection,
+  transactionCollection,
+  inventoryCollection,
+} = require("../../models/db");
 const {
   toFixedNumber,
   toISOStringDate,
@@ -200,8 +204,8 @@ const getAccountingData = async (req, res) => {
     }
   }
 
-  const cursor = transactionCollection.find(query);
-  const transactions = await cursor.toArray();
+  const transactionCursor = transactionCollection.find(query);
+  const transactions = await transactionCursor.toArray();
 
   if (!transactions || transactions.length === 0) {
     return res.send({
@@ -209,6 +213,24 @@ const getAccountingData = async (req, res) => {
       message: "No Data Found",
     });
   }
+  const invoiceCursor = invoiceCollection.find(query);
+  const invoices = await invoiceCursor.toArray();
+  const inventoryCursor = inventoryCollection.find(query);
+  const inventory = await inventoryCursor.toArray();
+
+  let sales_paid_amount = 0;
+  const total_sales_invoice_amount = invoices?.reduce((sum, invoice) => {
+    sales_paid_amount =
+      sales_paid_amount + (invoice?.total_cost?.total_paid || 0);
+    return sum + (invoice?.total_cost?.total || 0);
+  }, 0);
+
+  let purchase_paid_amount = 0;
+  const total_purchase_invoice_amount = inventory?.reduce((sum, invoice) => {
+    purchase_paid_amount =
+      purchase_paid_amount + (invoice?.total_cost?.paid || 0);
+    return sum + (invoice?.total_cost?.total || 0);
+  }, 0);
 
   let total_sales = 0;
   let total_purchase = 0;
@@ -267,6 +289,24 @@ const getAccountingData = async (req, res) => {
         total_sales,
         total_purchase,
         other_costs,
+      },
+      sales_purchase_summary: {
+        sales_invoice_summary: {
+          invoice_count: invoices?.length,
+          total_invoice_amount: total_sales_invoice_amount,
+          total_paid_amount: sales_paid_amount,
+          total_due_amount: toFixedNumber(
+            total_sales_invoice_amount - sales_paid_amount || 0
+          ),
+        },
+        purchase_invoice_summary: {
+          invoice_count: inventory?.length,
+          total_invoice_amount: total_purchase_invoice_amount,
+          total_paid_amount: purchase_paid_amount,
+          total_due_amount: toFixedNumber(
+            total_purchase_invoice_amount - purchase_paid_amount || 0
+          ),
+        },
       },
     },
   });
