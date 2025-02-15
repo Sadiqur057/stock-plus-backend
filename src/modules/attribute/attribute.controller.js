@@ -8,18 +8,9 @@ const {
 
 const getAttributes = async (req, res) => {
   const user = req.user;
-  const result = await getAllAttribute(user);
-  if (!result) {
-    res.send({
-      success: false,
-      message: "No attribute found",
-    });
-  }
-  res.send({
-    success: true,
-    message: "Attribute fetched successfully",
-    data: result,
-  });
+  const params =req.query;
+  const result = await getAllAttribute(user, params);
+  return res.send(result);
 };
 
 const addAttribute = async (req, res) => {

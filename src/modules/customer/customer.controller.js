@@ -8,18 +8,9 @@ const {
 
 const getCustomers = async (req, res) => {
   const user = req.user;
-  const result = await getAllCustomer(user);
-  if (!result) {
-    res.send({
-      success: false,
-      message: "No user found",
-    });
-  }
-  res.send({
-    success: true,
-    message: "User fetched successfully",
-    data: result,
-  });
+  const params = req.query;
+  const result = await getAllCustomer(user, params);
+  res.send(result);
 };
 
 const addCustomer = async (req, res) => {

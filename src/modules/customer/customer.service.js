@@ -1,11 +1,37 @@
 const { ObjectId } = require("mongodb");
 const { customerCollection } = require("../../models/db");
 
-const getAllCustomer = async (user) => {
+const getAllCustomer = async (user, params) => {
   const query = { company_email: user?.company_email };
-  const cursor = customerCollection.find(query).sort({ _id: -1 });
+  const { limit, page } = params || {};
+  const skip = (page - 1) * limit;
+  const cursor = customerCollection
+    .find(query)
+    .skip(parseInt(skip))
+    .limit(parseInt(limit))
+    .sort({ created_at: -1 });
   const result = await cursor.toArray();
-  return result;
+
+  if (!result) {
+    return {
+      success: false,
+      message: "No user found",
+    };
+  }
+  const totalDocuments = await customerCollection.countDocuments(query);
+  const totalPages = Math.ceil(totalDocuments / limit);
+  const updatedData = {
+    customers: result,
+    pagination: {
+      totalDocuments,
+      totalPages,
+    },
+  };
+  return {
+    success: true,
+    message: "Customer fetched successfully",
+    data: updatedData,
+  };
 };
 
 const saveCustomerToDB = async (data, user) => {
@@ -13,7 +39,8 @@ const saveCustomerToDB = async (data, user) => {
     ...data,
     company_email: user?.company_email,
     created_by_email: user?.email,
-    created_by_name: user?.name
+    created_by_name: user?.name,
+    created_at: new Date(),
   };
   const result = await customerCollection.insertOne(updatedData);
   return result;
@@ -45,6 +72,6 @@ const services = {
   getAllCustomer,
   getSingleCustomer,
   updateCustomerDetails,
-  deleteCustomerFromDB
+  deleteCustomerFromDB,
 };
 module.exports = services;
