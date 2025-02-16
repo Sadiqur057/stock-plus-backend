@@ -9,7 +9,33 @@ const { toFixedNumber } = require("../../utils/utility");
 const getSingleReport = async (id) => {
   const filter = { _id: new ObjectId(id) };
   const result = await inventoryCollection.findOne(filter);
-  return result;
+  if (!result) {
+    return res.send({ success: false, message: "No Report Found" });
+  }
+
+  const transactionQuery = { invoice_id: id };
+  const transactionData = await transactionCollection
+    .find(transactionQuery)
+    .sort({ created_at: -1 })
+    .toArray();
+  console.log("checking",transactionData);
+  const transactions = transactionData.map((transaction) => {
+    return {
+      _id: transaction?._id,
+      amount: transaction?.amount,
+      created_at: transaction?.created_at,
+      payment_method: transaction?.payment_method,
+    };
+  });
+  const updatedData = {
+    invoice: result,
+    transactions,
+  };
+  return {
+    success: true,
+    message: "Invoice fetched successfully",
+    data: updatedData,
+  };
 };
 
 const deleteReport = async (id) => {
@@ -89,7 +115,7 @@ const saveInventoryTransactionToDB = async (id, data, user) => {
       created_at: formattedDate,
       transaction_desc: "purchases",
       transaction_type: "out",
-      invoice_id: id,
+      invoice_id: id.toString(),
     };
 
     const transactionResult = await transactionCollection.insertOne(

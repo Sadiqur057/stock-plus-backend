@@ -112,7 +112,7 @@ const saveInvoiceToDB = async (data, user) => {
         transaction_type: "in",
         payment_description,
         created_at: data?.created_at,
-        invoice_id: invoiceResult?.insertedId,
+        invoice_id: invoiceResult?.insertedId.toString(),
       };
       const transactionResult = await transactionCollection.insertOne(
         transactionData,
@@ -220,7 +220,34 @@ const getAllInvoices = async (user, params) => {
 const getInvoiceDetails = async (id) => {
   const filter = { _id: new ObjectId(id) };
   const result = await invoiceCollection.findOne(filter);
-  return result;
+  if (!result) {
+    return {
+      success: false,
+      message: "Invoice Now Found",
+    };
+  }
+  const transactionQuery = { invoice_id: id };
+  const transactionData = await transactionCollection
+    .find(transactionQuery)
+    .sort({ created_at: -1 })
+    .toArray();
+  const transactions = transactionData.map((transaction) => {
+    return {
+      _id: transaction?._id,
+      amount: transaction?.amount,
+      created_at: transaction?.created_at,
+      payment_method: transaction?.payment_method,
+    };
+  });
+  const updatedData = {
+    invoice: result,
+    transactions,
+  };
+  return {
+    success: true,
+    message: "Invoice fetched successfully",
+    data: updatedData,
+  };
 };
 
 const deleteInvoiceFromDB = async (id) => {

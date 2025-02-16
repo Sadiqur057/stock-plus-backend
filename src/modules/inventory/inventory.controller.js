@@ -139,7 +139,7 @@ const addItems = async (req, res) => {
           transaction_desc: "purchases",
           transaction_type: "out",
           created_at: data?.created_at,
-          invoice_id: invoiceId,
+          invoice_id: invoiceId.toString(),
         };
         const transactionResult = await transactionCollection.insertOne(
           transactionData,
@@ -242,11 +242,9 @@ const getItems = async (req, res) => {
 const getInventoryReport = async (req, res) => {
   const id = req.params.id;
   const result = await getSingleReport(id);
-  if (!result) {
-    return res.send({ success: false, message: "No Report Found" });
-  }
-  res.send({ success: true, message: "Report Found", data: result });
+  res.send(result);
 };
+
 const deleteInventoryReport = async (req, res) => {
   const id = req.params.id;
   const result = await deleteReport(id);

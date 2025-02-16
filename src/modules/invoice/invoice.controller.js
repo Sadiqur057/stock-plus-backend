@@ -70,17 +70,7 @@ const getInvoices = async (req, res) => {
 const getInvoice = async (req, res) => {
   const id = req.params.id;
   const result = await getInvoiceDetails(id);
-  if (!result) {
-    return res.send({
-      success: false,
-      message: "Invoice Now Found",
-    });
-  }
-  res.send({
-    success: true,
-    message: "Invoice fetched successfully",
-    data: result,
-  });
+  return res.send(result);
 };
 
 const deleteInvoice = async (req, res) => {
