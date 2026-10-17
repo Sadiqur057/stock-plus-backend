@@ -4,11 +4,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.puy7l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-MongoClient.connect(uri, function(err, client) {
-  const collection = client.db("test").collection("devices");
-  // perform actions on the collection object
-  client.close();
-});
+
 
 const client = new MongoClient(uri, {
   serverApi: {
