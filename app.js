@@ -8,7 +8,7 @@ const routes = require("./src/routes/route");
 app.use(express.json());
 
 const corsOptions = {
-  origin: ["https://stock-plus-five.vercel.app", "http://localhost:3000"],
+  origin: ["https://stock-plus-five.vercel.app", "http://localhost:3000","https://stockpluspro.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 200,
