@@ -1,9 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
+require("dotenv").config({ path: [".env.local", ".env"] });
 const app = express();
 
 const routes = require("./src/routes/route");
+const { client } = require("./src/models/db");
 
 app.use(express.json());
 
@@ -14,7 +15,7 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(cors());
 
 app.use("/", routes);
@@ -40,6 +41,12 @@ if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
   });
+
+  client
+    .connect()
+    .then(() => client.db("admin").command({ ping: 1 }))
+    .then(() => console.log("MongoDB connected successfully"))
+    .catch((err) => console.error("MongoDB connection failed:", err.message));
 }
 
 module.exports = app;
