@@ -1,9 +1,10 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.x7pm4nr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// mongodb+srv://<db_username>:<db_password>@cluster0.x7pm4nr.mongodb.net/
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.puy7l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.x7pm4nr.mongodb.net/`;
 
+console.log("MongoDB URI:", uri); // Log the URI to verify it's correct
 
 
 const client = new MongoClient(uri, {
