@@ -4,7 +4,6 @@ const {
   client,
   attributeCollection,
 } = require("../../models/db");
-const { getProductDetails } = require("./product.controller");
 
 const getAllProducts = async (user, filters) => {
   const { search, filter, sort, limit, page } = filters;
@@ -252,7 +251,6 @@ const productServices = {
   addNewProduct,
   getAllProducts,
   getSingleProduct,
-  getProductDetails,
   deleteProduct,
   updateExistingProduct,
   updateExistingProductStock,
